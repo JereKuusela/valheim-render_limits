@@ -15,6 +15,8 @@ public class Configuration {
   public static int GeneratedArea => Math.Max(LoadedArea, ConfigWrapper.TryParseInt(configGeneratedArea));
   public static ConfigEntry<string> configRealTerrainVisibility;
   public static int RealTerrainVisibility => ConfigWrapper.TryParseInt(configRealTerrainVisibility);
+  public static ConfigEntry<string> configSpawnLimit;
+  public static int SpawnLimit => ConfigWrapper.TryParseInt(configSpawnLimit);
 
 
   public static void Init(ConfigSync configSync, ConfigFile configFile) {
@@ -37,5 +39,6 @@ public class Configuration {
     configRealTerrainVisibility.SettingChanged += (e, s) => {
       TerrainVisibility.Update();
     };
+    configSpawnLimit = wrapper.Bind(section, "Spawn limit", "200", "How many meters away the spawn limits are checked. 0 for all loaded objects (base game behavior).");
   }
 }
