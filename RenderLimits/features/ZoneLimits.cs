@@ -7,7 +7,7 @@ public class ZoneSystemActive {
   static void Postfix(ZoneSystem __instance) => Set(__instance);
   static void Set(ZoneSystem obj) {
     obj.m_activeArea = Configuration.LoadedArea - 1;
-    obj.m_activeDistantArea = Configuration.GeneratedArea - Configuration.LoadedArea;
+    obj.m_activeDistantArea = Configuration.DistantArea - Configuration.LoadedArea;
   }
   public static void Update() {
     if (ZoneSystem.instance) Set(ZoneSystem.instance);

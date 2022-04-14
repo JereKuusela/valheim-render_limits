@@ -7,3 +7,7 @@ To compile, you need to manually add correct libraries to Libs folder. Check pro
 - Download BepInEx for Valheim and use DLLs from core and unstripped_corlib folders.
 - Valheim DLLs can be found from Valheim_Data/Managed folder.
 - DLLS which end with _publicized require using https://github.com/CabbageCrow/AssemblyPublicizer.
+
+Ideas:
+
+- Add a way to force specific zones loaded (like if you want to make a lighthouse or keep animals breeding).
