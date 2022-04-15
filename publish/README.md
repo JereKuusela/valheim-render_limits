@@ -38,6 +38,9 @@ This "fix" must done, otherwise increasing active or loaded are would significan
 
 # Changelog
 
+- v1.1
+	- Fixes the spawn limit having less range than intended.
+
 - v1.0
 	- Initial release.
 

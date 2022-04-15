@@ -7,10 +7,10 @@ public class SpawnLimits {
   static void Prefix(GameObject prefab, ref Vector3 center, ref float maxRange) {
     if (maxRange == 0f) {
       maxRange = Configuration.SpawnLimit;
-      if (center == Vector3.zero) {
-        center.x = prefab.transform.position.x;
-        center.y = prefab.transform.position.y;
-        center.z = prefab.transform.position.z;
+      if (center == Vector3.zero && ZNet.instance) {
+        center.x = ZNet.instance.m_referencePosition.x;
+        center.y = ZNet.instance.m_referencePosition.y;
+        center.z = ZNet.instance.m_referencePosition.z;
       }
     }
   }
