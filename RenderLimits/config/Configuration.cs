@@ -17,6 +17,8 @@ public class Configuration {
   public static int RealTerrainVisibility => ConfigWrapper.TryParseInt(configRealTerrainVisibility);
   public static ConfigEntry<string> configSpawnLimit;
   public static int SpawnLimit => ConfigWrapper.TryParseInt(configSpawnLimit);
+  public static ConfigEntry<string> configClutterVisibility;
+  public static int ClutterVisibility => ConfigWrapper.TryParseInt(configClutterVisibility);
 
 
   public static void Init(ConfigSync configSync, ConfigFile configFile) {
@@ -38,6 +40,10 @@ public class Configuration {
     configRealTerrainVisibility = wrapper.Bind(section, "Real terrain visibility", "180", "Visibility in meters.");
     configRealTerrainVisibility.SettingChanged += (e, s) => {
       TerrainVisibility.Update();
+    };
+    configClutterVisibility = wrapper.Bind(section, "Clutter visibility", "45", "Visibility in meters.");
+    configClutterVisibility.SettingChanged += (e, s) => {
+      ClutterDistance.Update();
     };
     configSpawnLimit = wrapper.Bind(section, "Spawn limit", "200", "How many meters away the spawn limits are checked. 0 for all loaded objects (base game behavior).");
   }

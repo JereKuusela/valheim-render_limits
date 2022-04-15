@@ -29,6 +29,7 @@ Finally there is the distant area that is two zones around the loaded area. Here
 - Active area (key: `active_area`, default: `2`): Amounts of zones that are active around the player. Creatures are visible in this area. Minimum value is 1.
 - Distant area (key: `distant_area`, default: `5`): Amounts of zones generated around the player. Big static objects like trees are visible in this area. Minimum value is Loaded area.
 - Loaded area (key: `loaded_area`, default: `3`): Amounts of zones loaded around the player. Structures are visible in this area. Minimum value is Active area.
+- Clutter visibility area (key: `clutter_visibility`, default: `45`): How many meters away the clutter like grass is shown. This is based on the camera position which works bit weird for smaller values.
 - Spawn limit (key: `spawn_limit`, default: `200`): How many meters away the spawn limits are checked. 0 for all loaded objects (base game behavior).
 - Real terrain visibility (key: `real_terrain_visibility`, default: `180`): Visibility in meters. Higher values move the low quality terrain further away but may show unloaded areas as void.
 
@@ -39,6 +40,7 @@ This "fix" must done, otherwise increasing active or loaded are would significan
 # Changelog
 
 - v1.1
+	- Adds a new setting `clutter_visibility` to change how far grass is visible.
 	- Fixes the spawn limit having less range than intended.
 
 - v1.0
