@@ -2,7 +2,7 @@
 using HarmonyLib;
 
 namespace RenderLimits;
-[BepInPlugin("valheim.jere.render_limits", "RenderLimits", "1.1.0.0")]
+[BepInPlugin("valheim.jere.render_limits", "RenderLimits", "1.2.0.0")]
 public class ExpandWorld : BaseUnityPlugin {
   ServerSync.ConfigSync ConfigSync = new("valheim.jere.render_limits")
   {

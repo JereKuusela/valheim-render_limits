@@ -25,7 +25,7 @@ public class InActiveArea {
 [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.OutsideActiveArea), new[] { typeof(Vector3), typeof(Vector3) })]
 public class OutsideActiveArea {
   static bool Prefix(Vector3 point, Vector3 refPoint, ref bool __result) {
-    var num = Configuration.ActiveArea - 1;
+    var num = Configuration.ActiveArea;
     var zone = ZoneSystem.instance.GetZone(refPoint);
     var zone2 = ZoneSystem.instance.GetZone(point);
     __result = zone2.x <= zone.x - num || zone2.x >= zone.x + num || zone2.y >= zone.y + num || zone2.y <= zone.y - num;

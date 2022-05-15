@@ -39,6 +39,9 @@ This "fix" must done, otherwise increasing active or loaded are would significan
 
 # Changelog
 
+- v1.2
+	- Fixes structure stability calculation not working on nearby zones.
+
 - v1.1
 	- Adds a new setting `clutter_visibility` to change how far grass is visible.
 	- Fixes the spawn limit having less range than intended.
