@@ -2,6 +2,7 @@ using System;
 using BepInEx.Configuration;
 using ServerSync;
 using Service;
+using UnityEngine;
 namespace RenderLimits;
 public class Configuration {
 #nullable disable
@@ -19,7 +20,7 @@ public class Configuration {
   public static int SpawnLimit => ConfigWrapper.TryParseInt(configSpawnLimit);
   public static ConfigEntry<string> configClutterVisibility;
   public static int ClutterVisibility => ConfigWrapper.TryParseInt(configClutterVisibility);
-
+  public static ConfigEntry<string> configLodBias;
 
   public static void Init(ConfigSync configSync, ConfigFile configFile) {
     ConfigWrapper wrapper = new("render_config", configFile, configSync);
@@ -46,5 +47,11 @@ public class Configuration {
       ClutterDistance.Update();
     };
     configSpawnLimit = wrapper.Bind(section, "Spawn limit", "200", "How many meters away the spawn limits are checked. 0 for all loaded objects (base game behavior).");
+
+    configLodBias = wrapper.Bind(section, "Lod bias", "5", "Level of detail limit (increase to show smaller objects).");
+    configLodBias.SettingChanged += (e, s) => {
+      QualitySettings.lodBias = ConfigWrapper.TryParseFloat(configLodBias);
+    };
+    QualitySettings.lodBias = ConfigWrapper.TryParseFloat(configLodBias);
   }
 }

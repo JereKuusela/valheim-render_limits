@@ -4,11 +4,7 @@ This client side mod allows changing how far away zones are rendered, loaded and
 
 Can be installed on the server for syncing the client configs but not mandatory.
 
-# Manual Installation
-
-1. Install the [BepInExPack Valheim](https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim).
-2. Download the zip and extract the DLL file to the \<GameDirectory\>\BepInEx\plugins\ folder.
-3. Optionally also install the [Configuration manager](https://github.com/BepInEx/BepInEx.ConfigurationManager/releases/tag/v16.4).
+Check any modding [guide](https://youtu.be/WfvA5a5tNHo) for installation instructions.
 
 # Posssible uses
 
@@ -29,6 +25,7 @@ Finally there is the distant area that is two zones around the loaded area. Here
 - Active area (key: `active_area`, default: `2`): Amounts of zones that are active around the player. Creatures are visible in this area. Minimum value is 1.
 - Distant area (key: `distant_area`, default: `5`): Amounts of zones generated around the player. Big static objects like trees are visible in this area. Minimum value is Loaded area.
 - Loaded area (key: `loaded_area`, default: `3`): Amounts of zones loaded around the player. Structures are visible in this area. Minimum value is Active area.
+- Lod bias (key: `lod_bias`, default: `5`): Level of detail. Higher values show smaller distance objects.
 - Clutter visibility area (key: `clutter_visibility`, default: `45`): How many meters away the clutter like grass is shown. This is based on the camera position which works bit weird for smaller values.
 - Spawn limit (key: `spawn_limit`, default: `200`): How many meters away the spawn limits are checked. 0 for all loaded objects (base game behavior).
 - Real terrain visibility (key: `real_terrain_visibility`, default: `180`): Visibility in meters. Higher values move the low quality terrain further away but may show unloaded areas as void.
@@ -38,6 +35,10 @@ Note: The default value for spawn limit modifies how the game works. For example
 This "fix" must done, otherwise increasing active or loaded are would significantly reduce enemy spawns.
 
 # Changelog
+
+- v1.3
+	- Adds a new setting `lod_bias` to change how far away smaller objects are shown.
+	- Changes the mod GUID.
 
 - v1.2
 	- Fixes structure stability calculation not working on nearby zones.

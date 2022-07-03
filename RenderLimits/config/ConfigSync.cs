@@ -101,6 +101,7 @@ public class ConfigSync {
   public static bool ProcessingServerUpdate = false;
 
   public readonly string Name;
+  public string? LegagyName;
   public string? DisplayName;
   public string? CurrentVersion;
   public string? MinimumRequiredVersion;
@@ -214,6 +215,8 @@ public class ConfigSync {
       foreach (ConfigSync configSync in configSyncs) {
         configSync.IsSourceOfTruth = __instance.IsDedicated() || __instance.IsServer();
         ZRoutedRpc.instance.Register<ZPackage>(configSync.Name + " ConfigSync", configSync.RPC_ConfigSync);
+        if (configSync.LegagyName != null)
+          ZRoutedRpc.instance.Register<ZPackage>(configSync.LegagyName + " ConfigSync", configSync.RPC_ConfigSync);
         if (isServer) {
           Debug.Log($"Registered '{configSync.Name} ConfigSync' RPC - waiting for incoming connections");
         }
@@ -260,6 +263,8 @@ public class ConfigSync {
       if (!__instance.IsServer()) {
         foreach (ConfigSync configSync in configSyncs) {
           peer.m_rpc.Register<ZPackage>(configSync.Name + " ConfigSync", configSync.RPC_InitialConfigSync);
+          if (configSync.LegagyName != null)
+            peer.m_rpc.Register<ZPackage>(configSync.LegagyName + " ConfigSync", configSync.RPC_InitialConfigSync);
         }
       }
     }
