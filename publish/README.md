@@ -24,6 +24,7 @@ Finally there is the distant area that is two zones around the loaded area. Here
 
 - Active area (key: `active_area`, default: `2`): Amounts of zones that are active around the player. Creatures are visible in this area. Minimum value is 1.
 - Distant area (key: `distant_area`, default: `5`): Amounts of zones generated around the player. Big static objects like trees are visible in this area. Minimum value is Loaded area.
+- Force active (key: `force_active`): Zones that are always active. Internal value. Use the `force_active` command to modify this.
 - Loaded area (key: `loaded_area`, default: `3`): Amounts of zones loaded around the player. Structures are visible in this area. Minimum value is Active area.
 - Lod bias (key: `lod_bias`, default: `5`): Level of detail. Higher values show smaller distance objects.
 - Clutter visibility area (key: `clutter_visibility`, default: `45`): How many meters away the clutter like grass is shown. This is based on the camera position which works bit weird for smaller values.
@@ -34,7 +35,20 @@ Note: The default value for spawn limit modifies how the game works. For example
 
 This "fix" must done, otherwise increasing active or loaded are would significantly reduce enemy spawns.
 
+# Commands
+
+`force_active [add/remove/toggle] [around=0]`
+
+- `force_active`: Toggles the force active of the current zone.
+- `force_active add`: Adds force active to the current zone.
+- `force_active remove`: Removes force active from the current zone.
+- `force_active toggle 1`: Toggles the force active of the current zone and adjacent zones (9 zones).
+- `force_active add 2`: Adds force active to the current zone, adjacent zones and their adjacent zones (25 zones).
+
 # Changelog
+
+- v1.4
+	- Adds a new command `force_active` to force areas to stay active.
 
 - v1.3
 	- Adds a new setting `lod_bias` to change how far away smaller objects are shown.
