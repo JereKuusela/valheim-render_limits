@@ -47,7 +47,18 @@ This "fix" must done, otherwise increasing active or loaded are would significan
 - `force_active toggle 1`: Toggles the force active of the current zone and adjacent zones (9 zones).
 - `force_active add 2`: Adds force active to the current zone, adjacent zones and their adjacent zones (25 zones).
 
+# Credits
+
+Thanks for Azumatt for creating the mod icon!
+
+Sources: [GitHub](https://github.com/JereKuusela/valheim-render_limits)
+
+Donations: [Buy me a computer](https://www.buymeacoffee.com/jerekuusela)
+
 # Changelog
+
+- v1.5
+	- Fixes the black screen.
 
 - v1.4
 	- Adds a new command `force_active` to force areas to stay active.
@@ -62,8 +73,3 @@ This "fix" must done, otherwise increasing active or loaded are would significan
 - v1.1
 	- Adds a new setting `clutter_visibility` to change how far grass is visible.
 	- Fixes the spawn limit having less range than intended.
-
-- v1.0
-	- Initial release.
-
-Thanks for Azumatt for creating the mod icon!
