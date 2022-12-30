@@ -2,11 +2,7 @@
 
 This client side mod allows changing how far away zones are rendered, loaded and generated.
 
-Can be installed on the server for syncing the client configs but not mandatory.
-
 Install on the client (modding [guide](https://youtu.be/L9ljm2eKLrk)).
-
-Install on the server if want to sync the config.
 
 # Posssible uses
 
