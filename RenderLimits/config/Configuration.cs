@@ -72,14 +72,14 @@ public class Configuration
 
     configShadowQuality = wrapper.Bind(section, "Shadow quality", "", "0: off, 1: hard only, 2: all.", (int value) =>
     {
-      QualitySettings.shadows = (ShadowQuality)(Math.Max(0, Math.Min(2, value)));
+      QualitySettings.shadows = (ShadowQuality)Math.Max(0, Math.Min(2, value));
     });
 
     configShadowDistance = wrapper.Bind(section, "Shadow distance", "", "Max distance for shadows in meters (vanilla is from 80 to 150).", (float value) => QualitySettings.shadowDistance = value);
 
     configShadowResolution = wrapper.Bind(section, "Shadow resolution", "", "Shadow quality. From 0 to 3.", (int value) =>
     {
-      QualitySettings.shadowResolution = (ShadowResolution)(Math.Max(0, Math.Min(3, value)));
+      QualitySettings.shadowResolution = (ShadowResolution)Math.Max(0, Math.Min(3, value));
     });
     section = "3. Synced settings";
     configSpawnLimit = wrapper.BindSynced(section, "Spawn limit", "200", "How many meters away the spawn limits are checked. 0 for all loaded objects (base game behavior).");

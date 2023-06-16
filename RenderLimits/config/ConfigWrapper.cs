@@ -10,8 +10,8 @@ namespace Service;
 public class ConfigWrapper
 {
 
-  private ConfigFile ConfigFile;
-  private ConfigSync ConfigSync;
+  private readonly ConfigFile ConfigFile;
+  private readonly ConfigSync ConfigSync;
   public ConfigWrapper(string command, ConfigFile configFile, ConfigSync configSync)
   {
     ConfigFile = configFile;
@@ -96,8 +96,7 @@ public class ConfigWrapper
     context.AddString(message);
     Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, message);
   }
-  private Dictionary<string, ConfigEntryBase> Settings = new();
-  private Dictionary<string, Action<Terminal, string>> SettingHandlers = new();
+  private readonly Dictionary<string, Action<Terminal, string>> SettingHandlers = new();
   private void Register(ConfigEntry<string> setting)
   {
     var name = setting.Definition.Key;
@@ -141,26 +140,6 @@ public class ConfigWrapper
   public static bool TryParseFloat(string value, out float result)
   {
     return float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
-  }
-  private static void SetValue(Terminal context, ConfigEntry<int> setting, string name, string value)
-  {
-    if (value == "")
-    {
-      AddMessage(context, $"{name}: {setting.Value}.");
-      return;
-    }
-    setting.Value = ParseInt(value, (int)setting.DefaultValue);
-    AddMessage(context, $"{name} set to {setting.Value}.");
-  }
-  private static void SetValue(Terminal context, ConfigEntry<float> setting, string name, string value)
-  {
-    if (value == "")
-    {
-      AddMessage(context, $"{name}: {setting.Value}.");
-      return;
-    }
-    setting.Value = ParseFloat(value, (float)setting.DefaultValue);
-    AddMessage(context, $"{name} set to {setting.Value}.");
   }
   private static void SetValue<T>(Terminal context, ConfigEntry<T> setting, string name, string value)
   {

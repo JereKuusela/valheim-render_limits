@@ -7,7 +7,7 @@ public class RenderLimits : BaseUnityPlugin
 {
   const string GUID = "render_limits";
   const string NAME = "Render Limits";
-  const string VERSION = "1.6";
+  const string VERSION = "1.7";
   public static ServerSync.ConfigSync ConfigSync = new(GUID)
   {
     DisplayName = NAME,

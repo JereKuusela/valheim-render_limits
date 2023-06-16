@@ -51,7 +51,7 @@ public class OutsideActiveArea
   }
 }
 
-[HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.FindSectorObjects), typeof(Vector2i), typeof(int), typeof(int), typeof(List<ZDO>), typeof(List<ZDO>))]
+[HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.FindSectorObjects))]
 public class FindSectorObjects
 {
   static void Postfix(ZDOMan __instance, Vector2i sector, int area, List<ZDO> sectorObjects)
@@ -79,33 +79,6 @@ public class FindSectorObjects
   }
 }
 
-[HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.FindSectorObjects), typeof(Vector2i), typeof(int), typeof(List<ZDO>))]
-public class FindSectorObjects2
-{
-  static void Postfix(ZDOMan __instance, Vector2i sector, int area, List<ZDO> sectorObjects)
-  {
-    if (Configuration.ForceActive.Count == 0) return;
-    HashSet<Vector2i> added = new() { sector };
-    for (int i = 1; i <= area; i++)
-    {
-      for (int j = sector.x - i; j <= sector.x + i; j++)
-      {
-        added.Add(new(j, sector.y - i));
-        added.Add(new(j, sector.y + i));
-      }
-      for (int k = sector.y - i + 1; k <= sector.y + i - 1; k++)
-      {
-        added.Add(new(sector.x - i, k));
-        added.Add(new(sector.x + i, k));
-      }
-    }
-    foreach (var zone in Configuration.ForceActive)
-    {
-      if (added.Contains(zone)) continue;
-      __instance.FindObjects(zone, sectorObjects);
-    }
-  }
-}
 [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.FindDistantObjects))]
 public class FindDistantObjects
 {
