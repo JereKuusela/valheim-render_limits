@@ -1,9 +1,9 @@
 {
   "name": "Render_Limits",
-  "version_number": "1.8.0",
+  "version_number": "1.9.0",
   "website_url": "https://github.com/JereKuusela/valheim-render_limits",
   "description": "Allows changing how distant areas are rendered, loaded and generated.",
   "dependencies": [
-    "denikson-BepInExPack_Valheim-5.4.2105"
+    "denikson-BepInExPack_Valheim-5.4.2200"
   ]
 }
