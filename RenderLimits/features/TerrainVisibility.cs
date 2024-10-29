@@ -8,7 +8,7 @@ public class TerrainVisibility
   static void Set(Heightmap obj)
   {
     var material = obj.m_materialInstance;
-    if (material) material.SetFloat("_LodHideDistance", (float)Configuration.RealTerrainVisibility);
+    if (material) material.SetFloat("_LodHideDistance", Configuration.RealTerrainVisibility);
   }
   public static void Update()
   {

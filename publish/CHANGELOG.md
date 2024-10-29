@@ -1,3 +1,6 @@
+- v1.10
+  - Fixed for the new game version.
+
 - v1.9
   - Fixed for the new update.
 

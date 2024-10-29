@@ -14,7 +14,7 @@ public class ForceActiveCommand
       if (args.Length > 1) mode = args[1];
       var around = 0;
       if (args.Length > 2 && int.TryParse(args[2], out var amount)) around = amount;
-      var refZone = ZoneSystem.instance.GetZone(ZNet.instance.GetReferencePosition());
+      var refZone = ZoneSystem.GetZone(ZNet.instance.GetReferencePosition());
       for (var i = -around; i <= around; i++)
       {
         for (var j = -around; j <= around; j++)

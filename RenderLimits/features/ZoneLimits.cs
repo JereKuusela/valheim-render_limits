@@ -39,8 +39,8 @@ public class OutsideActiveArea
   static bool Prefix(Vector3 point, Vector3 refPoint, ref bool __result)
   {
     var num = Configuration.ActiveArea;
-    var zone = ZoneSystem.instance.GetZone(refPoint);
-    var zone2 = ZoneSystem.instance.GetZone(point);
+    var zone = ZoneSystem.GetZone(refPoint);
+    var zone2 = ZoneSystem.GetZone(point);
     if (Configuration.ForceActive.Contains(zone2))
     {
       __result = false;
