@@ -84,4 +84,21 @@ public class Configuration
     section = "3. Synced settings";
     configSpawnLimit = wrapper.BindSynced(section, "Spawn limit", "200", "How many meters away the spawn limits are checked. 0 for all loaded objects (base game behavior).");
   }
+
+  public static void InitSettings()
+  {
+    // Game loads QualitySettings after Awake, so we need to set them here.
+    if (ConfigWrapper.TryParseInt(configLodBias.Value, out var lodBias))
+      QualitySettings.lodBias = lodBias;
+    if (ConfigWrapper.TryParseInt(configPixelLightCount.Value, out var pixelLightCount))
+      QualitySettings.pixelLightCount = pixelLightCount;
+    if (ConfigWrapper.TryParseInt(configShadowCascades.Value, out var shadowCascades))
+      QualitySettings.shadowCascades = shadowCascades;
+    if (ConfigWrapper.TryParseInt(configShadowQuality.Value, out var shadowQuality))
+      QualitySettings.shadows = (ShadowQuality)Math.Max(0, Math.Min(2, shadowQuality));
+    if (ConfigWrapper.TryParseFloat(configShadowDistance.Value, out var shadowDistance))
+      QualitySettings.shadowDistance = shadowDistance;
+    if (ConfigWrapper.TryParseInt(configShadowResolution.Value, out var shadowResolution))
+      QualitySettings.shadowResolution = (ShadowResolution)Math.Max(0, Math.Min(3, shadowResolution));
+  }
 }

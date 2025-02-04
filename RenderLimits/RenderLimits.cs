@@ -7,7 +7,7 @@ public class RenderLimits : BaseUnityPlugin
 {
   const string GUID = "render_limits";
   const string NAME = "Render Limits";
-  const string VERSION = "1.10";
+  const string VERSION = "1.11";
   public static ServerSync.ConfigSync ConfigSync = new(GUID)
   {
     DisplayName = NAME,
@@ -23,6 +23,14 @@ public class RenderLimits : BaseUnityPlugin
   }
 }
 
+[HarmonyPatch(typeof(Settings), nameof(Settings.ApplyQualitySettings))]
+public class ApplyQualitySettings
+{
+  static void Postfix()
+  {
+    Configuration.InitSettings();
+  }
+}
 [HarmonyPatch(typeof(Terminal), nameof(Terminal.InitTerminal))]
 public class SetCommands
 {
