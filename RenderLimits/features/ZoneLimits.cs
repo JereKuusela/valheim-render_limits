@@ -18,7 +18,7 @@ public class ZoneSystemActive
   }
 }
 
-[HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.InActiveArea), new[] { typeof(Vector2i), typeof(Vector2i) })]
+[HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.InActiveArea), [typeof(Vector2i), typeof(Vector2i)])]
 public class InActiveArea
 {
   static bool Prefix(Vector2i zone, Vector2i refCenterZone, ref bool __result)
@@ -33,7 +33,22 @@ public class InActiveArea
     return false;
   }
 }
-[HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.OutsideActiveArea), new[] { typeof(Vector3), typeof(Vector3) })]
+[HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.InActiveArea), [typeof(Vector2i), typeof(Vector2i), typeof(int)])]
+public class InActiveArea2
+{
+  static bool Prefix(Vector2i zone, Vector2i refCenterZone, ref bool __result)
+  {
+    if (Configuration.ForceActive.Contains(zone))
+    {
+      __result = true;
+      return false;
+    }
+    var num = Configuration.ActiveArea - 1;
+    __result = zone.x >= refCenterZone.x - num && zone.x <= refCenterZone.x + num && zone.y <= refCenterZone.y + num && zone.y >= refCenterZone.y - num;
+    return false;
+  }
+}
+[HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.OutsideActiveArea), [typeof(Vector3), typeof(Vector3)])]
 public class OutsideActiveArea
 {
   static bool Prefix(Vector3 point, Vector3 refPoint, ref bool __result)
@@ -57,7 +72,7 @@ public class FindSectorObjects
   static void Postfix(ZDOMan __instance, Vector2i sector, int area, List<ZDO> sectorObjects)
   {
     if (Configuration.ForceActive.Count == 0) return;
-    HashSet<Vector2i> added = new() { sector };
+    HashSet<Vector2i> added = [sector];
     for (int i = 1; i <= area; i++)
     {
       for (int j = sector.x - i; j <= sector.x + i; j++)

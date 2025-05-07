@@ -1,3 +1,6 @@
+- v1.13
+  - Fixes Force active not working on single player (multiplayer of course doesn't work).
+
 - v1.12
   - Fixed for the new game version.
 

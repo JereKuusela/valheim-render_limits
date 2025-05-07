@@ -22,7 +22,7 @@ public class Configuration
   public static ConfigEntry<string> configClutterVisibility;
   public static int ClutterVisibility => ConfigWrapper.ParseInt(configClutterVisibility);
   public static ConfigEntry<string> configForceActive;
-  public static HashSet<Vector2i> ForceActive = new();
+  public static HashSet<Vector2i> ForceActive = [];
 
   public static ConfigEntry<string> configPixelLightCount;
   public static ConfigEntry<string> configShadowCascades;
@@ -33,7 +33,7 @@ public class Configuration
 
   private static void ParseForceActive(string value)
   {
-    ForceActive = value.Split('|').Select(s => s.Trim()).Select(s => s.Split(',')).Where(s => s.Length == 2).Select(s =>
+    ForceActive = [.. value.Split('|').Select(s => s.Trim()).Select(s => s.Split(',')).Where(s => s.Length == 2).Select(s =>
     {
       try
       {
@@ -43,7 +43,7 @@ public class Configuration
       {
         return new Vector2i();
       }
-    }).ToHashSet();
+    })];
   }
   public static void SaveForceActive()
   {

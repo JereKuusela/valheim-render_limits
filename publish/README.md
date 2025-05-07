@@ -62,6 +62,8 @@ This "fix" must done, otherwise increasing active or loaded are would significan
 - `force_active toggle 1`: Toggles the force active of the current zone and adjacent zones (9 zones).
 - `force_active add 2`: Adds force active to the current zone, adjacent zones and their adjacent zones (25 zones).
 
+`check_active`: Prints loaded zones to the console.
+
 # Credits
 
 Thanks for Azumatt for creating the mod icon!
