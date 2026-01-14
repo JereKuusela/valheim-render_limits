@@ -10,8 +10,6 @@ public class ForceActiveCommand
   {
     Helper.Command("force_active", "[add/remove/toggle] [around=0] - Toggles the force active of the current zone.", (args) =>
     {
-      if (RenderLimits.ConfigSync.IsLocked && !RenderLimits.ConfigSync.IsAdmin)
-        throw new InvalidOperationException("Only admins can edit locked configs.");
       var mode = "toggle";
       if (args.Length > 1) mode = args[1];
       var around = 0;
@@ -41,6 +39,7 @@ public class ForceActiveCommand
         }
       }
       Configuration.SaveForceActive();
+      LimitManager.UpdateLocalLimits();
     });
     Helper.Command("check_active", "- Prints currently loaded zones.", (args) =>
     {

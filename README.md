@@ -4,13 +4,13 @@ This client side mod allows changing how far away zones are rendered, loaded and
 
 Install on the client (modding [guide](https://youtu.be/L9ljm2eKLrk)).
 
-# Posssible uses
+## Possible uses
 
 - If you have a powerful computer, you can increase the limits for a higher draw distance (at the cost of performance).
 - If you want to take pretty picture of your entire base, you can temporarily increase the loaded area.
 - If you have performance issues, you can try reducing distant and loaded areas.
 
-# Configuration
+## Configuration
 
 The config can be found in the \<GameDirectory\>\BepInEx\config\ folder after the first start up. Or changed with the `render_config` command.
 
@@ -33,7 +33,7 @@ Note: The default value for spawn limit modifies how the game works. For example
 
 This "fix" must done, otherwise increasing active or loaded are would significantly reduce enemy spawns.
 
-# Commands
+## Commands
 
 `force_active [add/remove/toggle] [around=0]`
 

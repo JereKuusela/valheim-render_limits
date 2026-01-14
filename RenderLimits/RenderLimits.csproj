@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <Target Name="CopyDLL" AfterTargets="ILRepacker">
+  <Target Name="CopyDLL" AfterTargets="Build">
     <Copy
       SourceFiles="$(TargetDir)$(ProjectName).dll"
       DestinationFolder="$(ProjectDir)\..\..\Libs" />
@@ -42,11 +42,5 @@
     <Reference Include="assembly_utils.dll">
       <HintPath>..\..\Libs\assembly_utils.dll</HintPath>
     </Reference>
-    <Reference Include="ServerSync.dll">
-      <HintPath>..\..\Libs\ServerSync.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34.2" />
   </ItemGroup>
 </Project>

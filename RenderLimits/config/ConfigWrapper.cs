@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using BepInEx.Configuration;
-using ServerSync;
 
 namespace Service;
 
@@ -11,11 +10,9 @@ public class ConfigWrapper
 {
 
   private readonly ConfigFile ConfigFile;
-  private readonly ConfigSync ConfigSync;
-  public ConfigWrapper(string command, ConfigFile configFile, ConfigSync configSync)
+  public ConfigWrapper(string command, ConfigFile configFile)
   {
     ConfigFile = configFile;
-    ConfigSync = configSync;
 
     new Terminal.ConsoleCommand(command, "[key] [value] - Toggles or sets a config value.", (Terminal.ConsoleEventArgs args) =>
     {
@@ -30,7 +27,6 @@ public class ConfigWrapper
   private void HandleChange(ConfigEntry<string> configEntry, Action onChange)
   {
     configEntry.SettingChanged += (s, e) => onChange();
-    onChange();
   }
   private void HandleChange(ConfigEntry<string> configEntry, Action<string> onChange)
   {
@@ -39,21 +35,27 @@ public class ConfigWrapper
   }
   private void HandleChange(ConfigEntry<string> configEntry, Action<int> onChange)
   {
-    var onSettingChanged = (string value) =>
+    void onSettingChanged(string value)
     {
-      if (ConfigWrapper.TryParseInt(value, out var result))
+      if (TryParseInt(value, out var result))
         onChange(result);
-    };
+    }
     HandleChange(configEntry, onSettingChanged);
   }
   private void HandleChange(ConfigEntry<string> configEntry, Action<float> onChange)
   {
-    var onSettingChanged = (string value) =>
+    void onSettingChanged(string value)
     {
-      if (ConfigWrapper.TryParseFloat(value, out var result))
+      if (TryParseFloat(value, out var result))
         onChange(result);
-    };
+    }
     HandleChange(configEntry, onSettingChanged);
+  }
+  public ConfigEntry<bool> Bind(string group, string name, bool value, string description)
+  {
+    var configEntry = ConfigFile.Bind(group, name, value, description);
+    Register(configEntry);
+    return configEntry;
   }
   public ConfigEntry<string> Bind(string group, string name, string value, string description, Action onChange)
   {
@@ -83,14 +85,7 @@ public class ConfigWrapper
     HandleChange(configEntry, onChange);
     return configEntry;
   }
-  public ConfigEntry<T> BindSynced<T>(string group, string name, T value, string description)
-  {
-    var configEntry = ConfigFile.Bind(group, name, value, description);
-    Register(configEntry);
-    var syncedConfigEntry = ConfigSync.AddConfigEntry(configEntry);
-    syncedConfigEntry.SynchronizedConfig = true;
-    return configEntry;
-  }
+
   private static void AddMessage(Terminal context, string message)
   {
     context.AddString(message);
