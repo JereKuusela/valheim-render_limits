@@ -8,7 +8,7 @@ public class RenderLimits : BaseUnityPlugin
 {
   const string GUID = "render_limits";
   const string NAME = "Render Limits";
-  const string VERSION = "1.13.1";
+  const string VERSION = "1.14";
 
   public void Awake()
   {
@@ -17,7 +17,7 @@ public class RenderLimits : BaseUnityPlugin
   }
 }
 
-[HarmonyPatch(typeof(Settings), nameof(Settings.ApplyQualitySettings))]
+[HarmonyPatch(typeof(GraphicsSettingsManager), nameof(GraphicsSettingsManager.ApplyQualitySettings))]
 public class ApplyQualitySettings
 {
   static void Postfix()

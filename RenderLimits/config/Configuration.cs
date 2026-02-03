@@ -58,7 +58,7 @@ public class Configuration
     ConfigWrapper wrapper = new("render_config", configFile);
 
     var section = "1. Zones";
-    configActivateArea = wrapper.Bind(section, "Active zones", "1", "Amounts of zones that are active around the player. Creatures are visible in this area.", () => { LimitManager.UpdateLocalLimits(); ZoneSystemPatches.Update(); });
+    configActivateArea = wrapper.Bind(section, "Active zones", "1", "Amounts of zones that are active around the player. Creatures are active in this area.", () => { LimitManager.UpdateLocalLimits(); ZoneSystemPatches.Update(); });
     configLoadedArea = wrapper.Bind(section, "Loaded zones", "2", "Amounts of zones loaded around the player. Structures are visible in this area. ", () => { LimitManager.UpdateLocalLimits(); ZoneSystemPatches.Update(); TerrainVisibility.Update(); });
     configGeneratedArea = wrapper.Bind(section, "Generated zones", "4", "Amounts of zones generated around the player. Large static objects like trees are visible in this area.", () => { LimitManager.UpdateLocalLimits(); ZoneSystemPatches.Update(); });
     configRealTerrainVisibility = wrapper.Bind(section, "Real terrain visibility", "0", "Visibility in meters. If 0, automatically calculated from loaded area.", TerrainVisibility.Update);
