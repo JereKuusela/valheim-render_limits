@@ -1,3 +1,6 @@
+- v1.15
+  - Improves compatibility with other mods.
+
 - v1.14
   - Major update!
   - Adds multiplayer support. All settings now only affect your client.
@@ -15,6 +18,3 @@
 
 - v1.11
   - Fixes some settings being reset on game restart.
-
-- v1.10
-  - Fixed for the new game version.

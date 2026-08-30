@@ -170,6 +170,8 @@ public class ZDOManPatches
   // Simpler to override here instead of transpiling on parent method.
   static void FindSectorObjects_Prefix(ref int area, ref int distantArea)
   {
+    // Default loaded area is 2, no reason to react to anything else.
+    if (area != 2) return;
     var limits = LimitManager.GetCurrent();
     area = limits.LoadedArea;
     if (distantArea != 0)
@@ -179,6 +181,8 @@ public class ZDOManPatches
   [HarmonyPostfix]
   static void FindSectorObjects_Postfix(ZDOMan __instance, Vector2i sector, int area, List<ZDO> sectorObjects)
   {
+    // Default loaded area is 2, no reason to react to anything else.
+    if (area != 2) return;
     var forced = LimitManager.GetCurrent().ForceActive;
     if (forced.Count == 0) return;
     foreach (var zone in forced)

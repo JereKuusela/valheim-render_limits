@@ -8,7 +8,7 @@ public class RenderLimits : BaseUnityPlugin
 {
   const string GUID = "render_limits";
   const string NAME = "Render Limits";
-  const string VERSION = "1.14";
+  const string VERSION = "1.15";
 
   public void Awake()
   {
