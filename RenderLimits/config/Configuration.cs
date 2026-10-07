@@ -21,11 +21,15 @@ public class Configuration
   public static int ClutterVisibility => ConfigWrapper.ParseInt(configClutterVisibility);
   public static ConfigEntry<string> configForceActive;
   public static HashSet<Vector2s> ForceActive = [];
+  private static readonly Dictionary<long, HashSet<Vector2s>> forceActiveByWorld = [];
+  private static long world;
 
   public static ConfigEntry<string> configMaximumGeneratedArea;
   public static int MaximumGeneratedArea => Math.Max(1, ConfigWrapper.ParseInt(configMaximumGeneratedArea));
   public static ConfigEntry<bool> configAllowForceActive;
   public static bool AllowForceActive => configAllowForceActive.Value;
+  public static ConfigEntry<string> configMaximumForceActive;
+  public static int MaximumForceActive => Math.Max(0, ConfigWrapper.ParseInt(configMaximumForceActive));
 
   public static ConfigEntry<string> configPixelLightCount;
   public static ConfigEntry<string> configShadowCascades;
@@ -36,21 +40,32 @@ public class Configuration
 
   private static void ParseForceActive(string value)
   {
-    ForceActive = [.. value.Split('|').Select(s => s.Trim()).Select(s => s.Split(',')).Where(s => s.Length == 2).Select(s =>
+    forceActiveByWorld.Clear();
+    foreach (var entry in value.Split(';'))
     {
-      try
+      var parts = entry.Split(':');
+      if (parts.Length != 2 || !long.TryParse(parts[0].Trim(), out var uid)) continue;
+      HashSet<Vector2s> zones = [];
+      foreach (var pair in parts[1].Split('|').Select(s => s.Trim().Split(',')).Where(s => s.Length == 2))
       {
-        return new Vector2s(int.Parse(s[0]), int.Parse(s[1]));
+        if (int.TryParse(pair[0], out var x) && int.TryParse(pair[1], out var y))
+          zones.Add(new Vector2s(x, y));
       }
-      catch
-      {
-        return new Vector2s();
-      }
-    })];
+      forceActiveByWorld[uid] = zones;
+    }
+    SelectWorld();
+  }
+  public static void SelectWorld()
+  {
+    world = ZNet.m_world?.m_uid ?? 0;
+    if (!forceActiveByWorld.TryGetValue(world, out var zones))
+      forceActiveByWorld[world] = zones = [];
+    ForceActive = zones;
   }
   public static void SaveForceActive()
   {
-    configForceActive.Value = string.Join("|", ForceActive.Select(s => $"{s.x},{s.y}"));
+    forceActiveByWorld[world] = ForceActive;
+    configForceActive.Value = string.Join(";", forceActiveByWorld.Where(s => s.Value.Count > 0).Select(s => $"{s.Key}:{string.Join("|", s.Value.Select(z => $"{z.x},{z.y}"))}"));
   }
 
   public static void Init(ConfigFile configFile)
@@ -62,7 +77,11 @@ public class Configuration
     configLoadedArea = wrapper.Bind(section, "Loaded zones", "2", "Amounts of zones loaded around the player. Structures are visible in this area. ", LimitManager.Update);
     configGeneratedArea = wrapper.Bind(section, "Generated zones", "4", "Amounts of zones generated around the player. Large static objects like trees are visible in this area.", LimitManager.Update);
     configRealTerrainVisibility = wrapper.Bind(section, "Real terrain visibility", "0", "Visibility in meters. If 0, the game decides from loaded area.", Heightmap.ApplySettingsOnAll);
-    configForceActive = wrapper.Bind(section, "Force active", "", "Zones that are always active.", () => ParseForceActive(configForceActive.Value));
+    configForceActive = wrapper.Bind(section, "Force active", "", "Zones that are always active. Saved for each world.", () =>
+    {
+      ParseForceActive(configForceActive.Value);
+      ForceZones.Send();
+    });
 
     section = "2. Quality";
     configClutterVisibility = wrapper.Bind(section, "Clutter visibility", "45", "Visibility in meters.", ClutterDistance.Update);
@@ -76,7 +95,8 @@ public class Configuration
 
     section = "3. Server limits";
     configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones. Also limits loaded zones and active zones.", LimitManager.Update);
-    configAllowForceActive = wrapper.Bind(section, "Allow force active", false, "Currently has no effect.");
+    configAllowForceActive = wrapper.Bind(section, "Allow force active", false, "Whether clients can have force active areas.");
+    configMaximumForceActive = wrapper.Bind(section, "Maximum force active zones", "64", "Maximum force active zones for each client.", (int value) => { });
 
     ParseForceActive(configForceActive.Value);
     LimitManager.Update();
