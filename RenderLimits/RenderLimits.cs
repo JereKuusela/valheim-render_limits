@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System.IO;
+using BepInEx;
 using HarmonyLib;
 
 namespace RenderLimits;
@@ -14,6 +15,24 @@ public class RenderLimits : BaseUnityPlugin
   {
     Configuration.Init(Config);
     new Harmony(GUID).PatchAll();
+    SetupWatcher();
+  }
+
+  private void SetupWatcher()
+  {
+    FileSystemWatcher watcher = new(Path.GetDirectoryName(Config.ConfigFilePath), Path.GetFileName(Config.ConfigFilePath));
+    watcher.Changed += ReadConfigValues;
+    watcher.Created += ReadConfigValues;
+    watcher.Renamed += ReadConfigValues;
+    watcher.IncludeSubdirectories = true;
+    watcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
+    watcher.EnableRaisingEvents = true;
+  }
+
+  private void ReadConfigValues(object sender, FileSystemEventArgs e)
+  {
+    if (!File.Exists(Config.ConfigFilePath)) return;
+    LimitManager.Reload(Config);
   }
 }
 
