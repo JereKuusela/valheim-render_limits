@@ -7,6 +7,7 @@ namespace RenderLimits;
 public static class LimitManager
 {
   public static SimulationDistance Current = SimulationDistance.OriginalDistance;
+  public static int Active = 1;
   public static float ActiveRange = 1.5f;
   public static float ActiveRangeRounded = 1.75f;
 
@@ -37,10 +38,9 @@ public static class LimitManager
     var total = Math.Min(Math.Max(1, Configuration.GeneratedArea), Configuration.MaximumGeneratedArea);
     var near = Math.Min(Math.Max(1, Configuration.LoadedArea), total);
     var far = total - near;
-    var active = Math.Max(0, Math.Min(Configuration.ActiveArea, near - 1));
     Current = new SimulationDistance(near, far, true);
-    ActiveRange = active + 0.5f;
-    ActiveRangeRounded = active + 0.75f;
+    Active = Math.Max(0, Math.Min(Configuration.ActiveArea, near - 1));
+    SetRange(Active, near == 1);
     var net = ZNet.instance;
     if (!net) return;
     if (net.IsDedicated())
@@ -52,7 +52,15 @@ public static class LimitManager
         peer.m_rpc.Invoke("RPC_ValidatedSimulationDistance", package);
     }
     else
+    {
       net.SimulationDistanceServerHandshake();
+      PeerActive.Send(net);
+    }
+  }
+  public static void SetRange(int active, bool single)
+  {
+    ActiveRange = single ? 1f : active + 0.5f;
+    ActiveRangeRounded = active + 0.75f;
   }
 }
 

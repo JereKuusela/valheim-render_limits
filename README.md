@@ -21,7 +21,7 @@ On multiplayer, the mod must be installed on the server. The mod replaces the ga
 ### 1. Zones
 
 - Active zones (default: `1`): Amounts of zones that are active around the player. Creatures are active in this area.
-  - The server uses its own value for all players.
+  - The client sends its value to the server. The server limits it to Loaded zones minus one and uses it for that player.
 - Loaded zones (default: `2`): Amounts of zones loaded around the player. Structures are visible in this area.
 - Generated zones (default: `4`): Amounts of zones generated around the player. Large static objects like trees are visible in this area.
 - Real terrain visibility (default: `0`): Visibility in meters. If 0, the game decides from loaded area.
