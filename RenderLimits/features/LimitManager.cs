@@ -1,136 +1,90 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using BepInEx.Configuration;
 using HarmonyLib;
 
 namespace RenderLimits;
 
-public class PlayerLimits(int loadedArea, int activeArea, int generatedArea, HashSet<Vector2i> forceActive)
-{
-
-  // Default is 2 for active and 2 for active distant.
-  // Active area is actually the loaded area (just named poorly).
-
-  public int ActiveArea = Math.Max(0, activeArea);
-  // One buffer zone is needed to prevent things dropping out of map or falling apart.
-  public int LoadedArea = Math.Max(activeArea + 1, loadedArea);
-  public int GeneratedArea = Math.Max(0, generatedArea - loadedArea);
-  public int TotalArea = generatedArea;
-  public HashSet<Vector2i> ForceActive { get; set; } = forceActive != null ? [.. forceActive] : [];
-}
-
 public static class LimitManager
 {
-  public static string RPC_PLAYERSETTINGS = "RenderLimits_PlayerSettings";
-  private static readonly Dictionary<long, PlayerLimits> PlayerLimits = [];
-  private static long CurrentId = 0;
-  private static int MaxTotalArea = 0;
-  public static void SetCurrentPlayer(long uid)
-  {
-    CurrentId = uid;
-  }
+  public static SimulationDistance Current = SimulationDistance.OriginalDistance;
+  public static float ActiveRange = 1.5f;
+  public static float ActiveRangeRounded = 1.75f;
 
-  // Get or create player limits
-  public static PlayerLimits GetPlayerLimits(long uid)
+  private static bool batching = false;
+  private static bool changed = false;
+  public static void Reload(ConfigFile config)
   {
-    if (!PlayerLimits.ContainsKey(uid))
+    batching = true;
+    try
     {
-      // Unmodded clients should use default limits.
-      PlayerLimits[uid] = new PlayerLimits(1, 2, 4, []);
+      config.Reload();
     }
-    return PlayerLimits[uid];
-  }
-
-  // Update player limits
-  public static void SetPlayerLimits(long uid, int loadedArea, int activeArea, int generatedArea, HashSet<Vector2i> forceActive)
-  {
-    PlayerLimits[uid] = new PlayerLimits(loadedArea, activeArea, generatedArea, forceActive);
-    MaxTotalArea = CalculateMaxTotal();
-  }
-
-  // Remove player limits when they disconnect
-  public static void RemovePlayer(long uid)
-  {
-    PlayerLimits.Remove(uid);
-    MaxTotalArea = CalculateMaxTotal();
-  }
-
-  private static int CalculateMaxTotal() => PlayerLimits.Values.Max(limits => limits.TotalArea);
-  public static int GetMaxTotal() => MaxTotalArea;
-  public static PlayerLimits GetCurrent() => GetPlayerLimits(CurrentId);
-
-  // GetCurrent would probably work but more explicit this way.
-  public static PlayerLimits GetLocalLimits() => GetPlayerLimits(0);
-
-  public static void UpdateLocalLimits()
-  {
-    SetPlayerLimits(0, Configuration.LoadedArea, Configuration.ActiveArea, Configuration.GeneratedArea, Configuration.ForceActive);
-
-    if (Player.m_localPlayer)
+    finally
     {
-      var uid = Player.m_localPlayer.GetPlayerID();
-      SetPlayerLimits(uid, Configuration.LoadedArea, Configuration.ActiveArea, Configuration.GeneratedArea, Configuration.ForceActive);
-      SendPlayerLimitsToServer();
+      batching = false;
     }
+    if (!changed) return;
+    changed = false;
+    Update();
   }
-
-  // Send player limits to server via RPC
-  private static void SendPlayerLimitsToServer()
+  public static void Update()
   {
-    if (!ZNet.instance || ZNet.instance.IsServer())
-      return;
-    var server = ZNet.instance.GetServerRPC();
-    ZPackage package = new();
-    package.Write(Configuration.LoadedArea);
-    package.Write(Configuration.ActiveArea);
-    package.Write(Configuration.GeneratedArea);
-    package.Write(Configuration.ForceActive.Count);
-    foreach (var zone in Configuration.ForceActive)
-      package.Write(zone);
-
-    server?.Invoke(RPC_PLAYERSETTINGS, package);
-  }
-
-  // Receive player limits from client (server-side)
-  public static void RPC_PlayerSettings(ZRpc rpc, ZPackage pkg)
-  {
-    if (!ZNet.instance.IsServer())
-      return;
-    ZNetPeer peer = ZNet.instance.GetPeer(rpc);
-    var loadedArea = pkg.ReadInt();
-    var activeArea = pkg.ReadInt();
-    var generatedArea = Math.Min(Configuration.MaximumGeneratedArea, pkg.ReadInt());
-    HashSet<Vector2i> forceActive = [];
-    if (Configuration.AllowForceActive)
+    if (batching)
     {
-      var forceActiveCount = pkg.ReadInt();
-      for (int i = 0; i < forceActiveCount; i++)
-        forceActive.Add(pkg.ReadVector2i());
-    }
-    SetPlayerLimits(peer.m_uid, loadedArea, activeArea, generatedArea, forceActive);
-  }
-}
-
-[HarmonyPatch(typeof(ZNet), nameof(ZNet.RPC_PeerInfo))]
-public class ZNet_RPC_PeerInfo_Patch
-{
-  static void Postfix(ZNet __instance, ZRpc rpc)
-  {
-    ZNetPeer peer = __instance.GetPeer(rpc);
-    if (peer.m_uid == 0)
+      changed = true;
       return;
-    if (__instance.IsServer())
-      rpc.Register<ZPackage>(LimitManager.RPC_PLAYERSETTINGS, LimitManager.RPC_PlayerSettings);
+    }
+    var total = Math.Min(Math.Max(1, Configuration.GeneratedArea), Configuration.MaximumGeneratedArea);
+    var near = Math.Min(Math.Max(1, Configuration.LoadedArea), total);
+    var far = total - near;
+    var active = Math.Max(0, Math.Min(Configuration.ActiveArea, near - 1));
+    Current = new SimulationDistance(near, far, true);
+    ActiveRange = active + 0.5f;
+    ActiveRangeRounded = active + 0.75f;
+    var net = ZNet.instance;
+    if (!net) return;
+    if (net.IsDedicated())
+    {
+      net.ApplySimulationDistance(Current);
+      ZPackage package = new();
+      Current.Serialize(ref package);
+      foreach (var peer in net.GetPeers())
+        peer.m_rpc.Invoke("RPC_ValidatedSimulationDistance", package);
+    }
     else
-      LimitManager.UpdateLocalLimits();
+      net.SimulationDistanceServerHandshake();
   }
 }
-[HarmonyPatch(typeof(ZNet), nameof(ZNet.Disconnect))]
-public class ZNet_Disconnect
+
+[HarmonyPatch(typeof(GraphicsSettingsManager), nameof(GraphicsSettingsManager.GetSimulationDistance))]
+public class GetSimulationDistance
 {
-  static void Postfix(ZNet __instance, ZNetPeer peer)
+  static bool Prefix(ref SimulationDistance __result)
   {
-    if (__instance.IsServer())
-      LimitManager.RemovePlayer(peer.m_uid);
+    __result = LimitManager.Current;
+    return false;
+  }
+}
+
+[HarmonyPatch(typeof(ZNet), nameof(ZNet.Start))]
+public class ZNet_Start
+{
+  static void Postfix(ZNet __instance)
+  {
+    if (__instance.IsDedicated())
+      __instance.ApplySimulationDistance(LimitManager.Current);
+  }
+}
+
+[HarmonyPatch(typeof(ZNet), nameof(ZNet.RPC_ValidatedSimulationDistance))]
+public class ZNet_ValidatedSimulationDistance
+{
+  static SimulationDistance Last;
+  static void Postfix(ZNet __instance)
+  {
+    var synced = __instance.GetSyncedSimulationDistance();
+    if (synced.Equals(Last)) return;
+    Last = synced;
+    __instance.SimulationDistanceServerHandshake();
   }
 }

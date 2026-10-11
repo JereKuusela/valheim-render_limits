@@ -19,7 +19,7 @@ public class ForceActiveCommand
       {
         for (var j = -around; j <= around; j++)
         {
-          Vector2i zone = new(refZone.x + i, refZone.y + j);
+          Vector2s zone = new(refZone.x + i, refZone.y + j);
           var exists = Configuration.ForceActive.Contains(zone);
           var add = mode == "add" || (mode != "remove" && !exists);
           if (add && exists)
@@ -39,13 +39,12 @@ public class ForceActiveCommand
         }
       }
       Configuration.SaveForceActive();
-      LimitManager.UpdateLocalLimits();
     });
     Helper.Command("check_active", "- Prints currently loaded zones.", (args) =>
     {
       var zones = ZoneSystem.instance.m_zones;
-      List<Vector2i> forced = [.. zones.Keys.Where(zone => Configuration.ForceActive.Contains(zone))];
-      List<Vector2i> notForced = [.. zones.Keys.Where(zone => !Configuration.ForceActive.Contains(zone))];
+      List<Vector2s> forced = [.. zones.Keys.Where(zone => Configuration.ForceActive.Contains(zone))];
+      List<Vector2s> notForced = [.. zones.Keys.Where(zone => !Configuration.ForceActive.Contains(zone))];
       Helper.AddMessage(args.Context, $"Forced: {string.Join(", ", forced.Select(zone => $"{zone.x},{zone.y}"))}");
       Helper.AddMessage(args.Context, $"Default: {string.Join(", ", notForced.Select(zone => $"{zone.x},{zone.y}"))}");
     });

@@ -20,7 +20,7 @@ public class Configuration
   public static ConfigEntry<string> configClutterVisibility;
   public static int ClutterVisibility => ConfigWrapper.ParseInt(configClutterVisibility);
   public static ConfigEntry<string> configForceActive;
-  public static HashSet<Vector2i> ForceActive = [];
+  public static HashSet<Vector2s> ForceActive = [];
 
   public static ConfigEntry<string> configMaximumGeneratedArea;
   public static int MaximumGeneratedArea => Math.Max(1, ConfigWrapper.ParseInt(configMaximumGeneratedArea));
@@ -40,11 +40,11 @@ public class Configuration
     {
       try
       {
-        return new Vector2i(int.Parse(s[0]), int.Parse(s[1]));
+        return new Vector2s(int.Parse(s[0]), int.Parse(s[1]));
       }
       catch
       {
-        return new Vector2i();
+        return new Vector2s();
       }
     })];
   }
@@ -58,11 +58,11 @@ public class Configuration
     ConfigWrapper wrapper = new("render_config", configFile);
 
     var section = "1. Zones";
-    configActivateArea = wrapper.Bind(section, "Active zones", "1", "Amounts of zones that are active around the player. Creatures are active in this area.", () => { LimitManager.UpdateLocalLimits(); ZoneSystemPatches.Update(); });
-    configLoadedArea = wrapper.Bind(section, "Loaded zones", "2", "Amounts of zones loaded around the player. Structures are visible in this area. ", () => { LimitManager.UpdateLocalLimits(); ZoneSystemPatches.Update(); TerrainVisibility.Update(); });
-    configGeneratedArea = wrapper.Bind(section, "Generated zones", "4", "Amounts of zones generated around the player. Large static objects like trees are visible in this area.", () => { LimitManager.UpdateLocalLimits(); ZoneSystemPatches.Update(); });
-    configRealTerrainVisibility = wrapper.Bind(section, "Real terrain visibility", "0", "Visibility in meters. If 0, automatically calculated from loaded area.", TerrainVisibility.Update);
-    configForceActive = wrapper.Bind(section, "Force active", "", "Zones that are always active.", () => { ParseForceActive(configForceActive.Value); LimitManager.UpdateLocalLimits(); });
+    configActivateArea = wrapper.Bind(section, "Active zones", "1", "Amounts of zones that are active around the player. Creatures are active in this area.", LimitManager.Update);
+    configLoadedArea = wrapper.Bind(section, "Loaded zones", "2", "Amounts of zones loaded around the player. Structures are visible in this area. ", LimitManager.Update);
+    configGeneratedArea = wrapper.Bind(section, "Generated zones", "4", "Amounts of zones generated around the player. Large static objects like trees are visible in this area.", LimitManager.Update);
+    configRealTerrainVisibility = wrapper.Bind(section, "Real terrain visibility", "0", "Visibility in meters. If 0, the game decides from loaded area.", Heightmap.ApplySettingsOnAll);
+    configForceActive = wrapper.Bind(section, "Force active", "", "Zones that are always active.", () => ParseForceActive(configForceActive.Value));
 
     section = "2. Quality";
     configClutterVisibility = wrapper.Bind(section, "Clutter visibility", "45", "Visibility in meters.", ClutterDistance.Update);
@@ -75,11 +75,11 @@ public class Configuration
     configShadowResolution = wrapper.Bind(section, "Shadow resolution", "", "Shadow quality. From 0 to 3.", (int value) => QualitySettings.shadowResolution = (ShadowResolution)Math.Max(0, Math.Min(3, value)));
 
     section = "3. Server limits";
-    configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones that can be received from clients.", (int value) => { });
-    configAllowForceActive = wrapper.Bind(section, "Allow force active", false, "Whether clients can have force active areas.");
+    configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones. Also limits loaded zones and active zones.", LimitManager.Update);
+    configAllowForceActive = wrapper.Bind(section, "Allow force active", false, "Currently has no effect.");
 
     ParseForceActive(configForceActive.Value);
-    LimitManager.UpdateLocalLimits();
+    LimitManager.Update();
   }
 
   public static void InitSettings()
