@@ -46,7 +46,7 @@ public class CreatureSpawner_UpdateSpawner
       .MatchForward(false,
         new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(CreatureSpawner), nameof(CreatureSpawner.m_triggerDistance)))
       )
-      .Set(OpCodes.Call, AccessTools.Method(typeof(CreatureSpawner_UpdateSpawner), nameof(GetRange)))
+      .Repeat(matcher => matcher.SetAndAdvance(OpCodes.Call, AccessTools.Method(typeof(CreatureSpawner_UpdateSpawner), nameof(GetRange))))
       .InstructionEnumeration();
   }
 }
