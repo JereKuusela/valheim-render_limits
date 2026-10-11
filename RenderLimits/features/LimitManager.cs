@@ -71,6 +71,7 @@ public class ZNet_Start
 {
   static void Postfix(ZNet __instance)
   {
+    Configuration.SelectWorld();
     if (__instance.IsDedicated())
       __instance.ApplySimulationDistance(LimitManager.Current);
   }

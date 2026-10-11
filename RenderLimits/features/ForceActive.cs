@@ -42,9 +42,11 @@ public class ForceActiveCommand
     });
     Helper.Command("check_active", "- Prints currently loaded zones.", (args) =>
     {
+      if (!ForceZones.Accepted)
+        Helper.AddMessage(args.Context, "The server did not accept the force active zones.");
       var zones = ZoneSystem.instance.m_zones;
-      List<Vector2s> forced = [.. zones.Keys.Where(zone => Configuration.ForceActive.Contains(zone))];
-      List<Vector2s> notForced = [.. zones.Keys.Where(zone => !Configuration.ForceActive.Contains(zone))];
+      List<Vector2s> forced = [.. zones.Keys.Where(zone => ForceZones.Local.Contains(zone))];
+      List<Vector2s> notForced = [.. zones.Keys.Where(zone => !ForceZones.Local.Contains(zone))];
       Helper.AddMessage(args.Context, $"Forced: {string.Join(", ", forced.Select(zone => $"{zone.x},{zone.y}"))}");
       Helper.AddMessage(args.Context, $"Default: {string.Join(", ", notForced.Select(zone => $"{zone.x},{zone.y}"))}");
     });

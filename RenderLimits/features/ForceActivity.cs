@@ -9,10 +9,10 @@ public class SpawnArea_UpdateSpawn
 {
   static float GetRange(SpawnArea sa)
   {
-    if (Configuration.ForceActive.Count == 0)
+    if (ForceZones.Local.Count == 0)
       return sa.m_triggerDistance;
     var zone = ZoneSystem.GetZone(sa.transform.position);
-    if (!Configuration.ForceActive.Contains(zone))
+    if (!ForceZones.Local.Contains(zone))
       return sa.m_triggerDistance;
     return 999999f;
   }
@@ -33,10 +33,10 @@ public class CreatureSpawner_UpdateSpawner
 {
   static float GetRange(CreatureSpawner cs)
   {
-    if (Configuration.ForceActive.Count == 0)
+    if (ForceZones.Local.Count == 0)
       return cs.m_triggerDistance;
     var zone = ZoneSystem.GetZone(cs.transform.position);
-    if (!Configuration.ForceActive.Contains(zone))
+    if (!ForceZones.Local.Contains(zone))
       return cs.m_triggerDistance;
     return 999999f;
   }

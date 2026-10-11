@@ -26,6 +26,7 @@ On multiplayer, the mod must be installed on the server. The mod replaces the ga
 - Generated zones (default: `4`): Amounts of zones generated around the player. Large static objects like trees are visible in this area.
 - Real terrain visibility (default: `0`): Visibility in meters. If 0, the game decides from loaded area.
 - Force active (default: none): Zones that are always active. Use the `force_active` command to modify this.
+  - The list is saved for each world. Lists from older versions are ignored and must be added again.
   - Note: When using this near buildings, make sure to include the whole building.
   - Otherwise it might collapse because only a part of it is loaded.
 
@@ -43,10 +44,11 @@ On multiplayer, the mod must be installed on the server. The mod replaces the ga
 
 - Maximum generated zones (default: `10`): Maximum generated zones. Loaded zones and active zones are also limited by it.
   - This prevents a typo from freezing the game or the server. Increase it only if your computer can handle it.
-- Allow force active (default: `false`): Currently has no effect.
-  - Force active only works on your own computer. Other players on the server do not get it.
-  - Currently force active is not server specific. Players can accidentally have wrong settings for different servers.
+- Allow force active (default: `false`): Whether clients can have force active zones.
+  - The client sends its zones to the server. The server keeps them active and gives the client the objects in them.
+  - The server can refuse the list. Then the client does not use force active.
   - Force active can be used to collapse buildings by only loading a part of them.
+- Maximum force active zones (default: `64`): Maximum force active zones for each client.
 
 ## Credits
 
