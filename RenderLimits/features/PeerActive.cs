@@ -3,92 +3,81 @@ using System.Collections.Generic;
 using HarmonyLib;
 namespace RenderLimits;
 
+public class PeerData
+{
+  public SimulationDistance? Requested;
+  public int RequestedActive = 1;
+  public HashSet<Vector2s> Zones = [];
+}
+
 public static class PeerActive
 {
   private const string RPC_REQUEST = "RPC_RequestValidSimulationDistance";
-  private static readonly Dictionary<long, (int Requested, int Active, bool Single)> Peers = [];
-  private static int sent = -1;
+  private const string RPC_VALIDATED = "RPC_ValidatedSimulationDistance";
+  private static readonly Dictionary<ZNetPeer, PeerData> Peers = [];
 
-  public static void Apply(long uid)
+  // Peer being evaluated by the server's active area checks. Null is the local player.
+  public static ZNetPeer? Context;
+
+  public static ZNetPeer? Enter(ZNetPeer? peer)
   {
-    if (Peers.TryGetValue(uid, out var peer))
-      LimitManager.SetRange(peer.Active, peer.Single);
-    else
-      LimitManager.SetRange(LimitManager.Active, false);
+    var previous = Context;
+    Context = peer;
+    return previous;
   }
 
-  public static void Remove(long uid) => Peers.Remove(uid);
-
-  public static void Set(ZNetPeer peer, int? requested)
+  public static PeerData Get(ZNetPeer peer)
   {
-    if (peer.m_uid == 0) return;
-    var value = requested ?? (Peers.TryGetValue(peer.m_uid, out var previous) ? previous.Requested : 1);
-    var near = peer.m_simulationDistance.NearSimulationDistance;
-    Peers[peer.m_uid] = (value, Math.Max(0, Math.Min(value, near - 1)), near == 1);
+    if (!Peers.TryGetValue(peer, out var data))
+      Peers[peer] = data = new();
+    return data;
   }
 
-  public static void Send(ZNet net, bool force = false)
+  public static void Remove(ZNetPeer peer) => Peers.Remove(peer);
+
+  public static int Active(ZNetPeer? peer)
   {
-    if (net.IsServer()) return;
-    if (force) sent = -1;
+    if (peer == null)
+      return Math.Min(LimitManager.RequestedActive, LimitManager.MaxActive(ZNet.instance.GetSyncedSimulationDistance()));
+    return Math.Min(Get(peer).RequestedActive, LimitManager.MaxActive(peer.m_simulationDistance));
+  }
+
+  public static void Send(ZNet net)
+  {
     var rpc = net.GetServerRPC();
-    if (rpc == null || sent == LimitManager.Active) return;
-    sent = LimitManager.Active;
+    if (rpc == null) return;
     ZPackage package = new();
     LimitManager.Current.Serialize(ref package);
-    package.Write(LimitManager.Active);
+    package.Write(LimitManager.RequestedActive);
     rpc.Invoke(RPC_REQUEST, package);
   }
-}
 
-[HarmonyPatch(typeof(ZNet), nameof(ZNet.RPC_RequestValidSimulationDistance))]
-public class ZNet_RequestValidSimulationDistance
-{
-  static void Postfix(ZNet __instance, ZRpc rpc, ZPackage pkg)
+  public static void Apply(ZNetPeer peer, SimulationDistance validated)
   {
-    if (!__instance.IsServer()) return;
-    PeerActive.Set(__instance.GetPeer(rpc), pkg.GetPos() < pkg.Size() ? pkg.ReadInt() : null);
+    peer.m_simulationDistance = validated;
+    ZPackage package = new();
+    validated.Serialize(ref package);
+    peer.m_rpc.Invoke(RPC_VALIDATED, package);
+  }
+
+  // Re-applies the limit to what each peer requested, for when the maximum changes.
+  public static void Revalidate(ZNet net)
+  {
+    foreach (var peer in net.GetPeers())
+    {
+      if (!Peers.TryGetValue(peer, out var data) || data.Requested is not SimulationDistance requested) continue;
+      var validated = LimitManager.Limit(requested);
+      if (!validated.Equals(peer.m_simulationDistance))
+        Apply(peer, validated);
+    }
+  }
+
+  // Server generates ghost zones around every peer, so it must cover the widest of them.
+  public static SimulationDistance Widest(SimulationDistance own)
+  {
+    foreach (var peer in ZNet.instance.GetPeers())
+      own = LimitManager.Max(own, peer.m_simulationDistance);
+    return own;
   }
 }
 
-[HarmonyPatch(typeof(ZNet), nameof(ZNet.RPC_PeerInfo))]
-public class ZNet_PeerInfoActive
-{
-  static void Postfix(ZNet __instance)
-  {
-    PeerActive.Send(__instance, true);
-  }
-}
-
-[HarmonyPatch(typeof(ZNet), nameof(ZNet.Disconnect))]
-public class ZNet_DisconnectActive
-{
-  static void Postfix(ZNet __instance, ZNetPeer peer)
-  {
-    if (__instance.IsServer())
-      PeerActive.Remove(peer.m_uid);
-  }
-}
-
-[HarmonyPatch(typeof(ZDOMan))]
-public class ZDOMan_PeerActive
-{
-  [HarmonyPatch(nameof(ZDOMan.ReleaseNearbyZDOS))]
-  [HarmonyPatch(nameof(ZDOMan.IsInPeerActiveArea))]
-  [HarmonyPrefix]
-  static void Prefix(long uid, out (float Range, float Rounded) __state)
-  {
-    __state = (LimitManager.ActiveRange, LimitManager.ActiveRangeRounded);
-    PeerActive.Apply(uid);
-  }
-
-  [HarmonyPatch(nameof(ZDOMan.ReleaseNearbyZDOS))]
-  [HarmonyPatch(nameof(ZDOMan.IsInPeerActiveArea))]
-  [HarmonyFinalizer]
-  static Exception? Finalizer((float Range, float Rounded) __state, Exception? __exception)
-  {
-    LimitManager.ActiveRange = __state.Range;
-    LimitManager.ActiveRangeRounded = __state.Rounded;
-    return __exception;
-  }
-}

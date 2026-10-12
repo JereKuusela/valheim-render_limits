@@ -1,3 +1,8 @@
+- v1.16
+  - Adds setting for the shape to match vanilla settings.
+  - Fixed to work with the new update. Thanks Zeall!
+  - Integrated with the vanilla draw distance settings (with fixes). Thanks Zeall!
+
 - v1.15
   - Improves compatibility with other mods.
 

@@ -5,83 +5,84 @@ using HarmonyLib;
 using UnityEngine;
 namespace RenderLimits;
 
-[HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.CreateLocalZones))]
-public class CreateLocalZones
+[HarmonyPatch]
+public static class ZonePatches
 {
-  static void Postfix(ZoneSystem __instance, ref bool __result)
+  static float ActiveRange() => PeerActive.Active(PeerActive.Context) + 0.5f;
+
+  [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.CreateLocalZones))]
+  [HarmonyPostfix]
+  static void CreateLocalZones(ZoneSystem __instance, ref bool __result)
   {
     if (__result) return;
     foreach (var zone in ForceZones.Local)
     {
-      if (__instance.PokeLocalZone(zone))
-      {
-        __result = true;
-        break;
-      }
+      if (!__instance.PokeLocalZone(zone)) continue;
+      __result = true;
+      break;
     }
   }
-}
 
-[HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.PointInsideActiveArea))]
-public class PointInsideActiveArea
-{
-  static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+  // Client can have higher "generated zones" than the server, so must use the highest simulation distance available.
+  [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.CreateGhostZones))]
+  [HarmonyPrefix]
+  static void CreateGhostZones_Prefix(ZoneSystem __instance, out SimulationDistance __state)
   {
-    return new CodeMatcher(instructions)
-      .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 1.5f))
-      .Set(OpCodes.Ldsfld, AccessTools.Field(typeof(LimitManager), nameof(LimitManager.ActiveRange)))
-      .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 1.75f))
-      .Set(OpCodes.Ldsfld, AccessTools.Field(typeof(LimitManager), nameof(LimitManager.ActiveRangeRounded)))
-      .InstructionEnumeration();
+    __state = __instance.m_simulationDistance;
+    __instance.m_simulationDistance = PeerActive.Widest(__state);
   }
-  static void Postfix(Vector3 point, ref bool __result)
+
+  [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.CreateGhostZones))]
+  [HarmonyFinalizer]
+  static Exception? CreateGhostZones_Finalizer(ZoneSystem __instance, SimulationDistance __state, Exception? __exception)
   {
-    if (__result) return;
-    if (ForceZones.Current.Contains(ZoneSystem.GetZone(point)))
+    __instance.m_simulationDistance = __state;
+    return __exception;
+  }
+
+  [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.PointInsideActiveArea))]
+  [HarmonyTranspiler]
+  static IEnumerable<CodeInstruction> PointInsideActiveArea_Transpiler(IEnumerable<CodeInstruction> instructions) =>
+    new CodeMatcher(instructions)
+      .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, 1.5f))
+      .Set(OpCodes.Call, AccessTools.Method(typeof(ZonePatches), nameof(ActiveRange)))
+      .InstructionEnumeration();
+
+  [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.PointInsideActiveArea))]
+  [HarmonyPostfix]
+  static void PointInsideActiveArea_Postfix(Vector3 point, ref bool __result)
+  {
+    if (!__result && ForceZones.Current.Contains(ZoneSystem.GetZone(point)))
       __result = true;
   }
-}
 
-[HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.CreateObjects))]
-public class CreateObjects
-{
-  static void Prefix(List<ZDO> currentNearObjects)
+  [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.CreateObjects))]
+  [HarmonyPrefix]
+  static void CreateObjects(List<ZDO> currentNearObjects)
   {
-    var zones = ForceZones.Local;
-    if (zones.Count == 0) return;
     var manager = ZDOMan.instance;
-    foreach (var zone in zones)
+    foreach (var zone in ForceZones.Local)
     {
       if (ZoneSystem.instance.IsZoneLoaded(zone))
         manager.FindObjects(zone, currentNearObjects, manager.m_visitedSectorIndices);
     }
   }
-}
 
-[HarmonyPatch(typeof(ZDOMan))]
-public class ZDOManPatches
-{
-  [HarmonyPatch(nameof(ZDOMan.FindDistantObjects))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.FindDistantObjects))]
   [HarmonyPrefix]
-  static bool FindDistantObjects_Prefix(Vector2s sector) =>
-    !ForceZones.Current.Contains(sector);
+  static bool FindDistantObjects(Vector2s sector) => !ForceZones.Current.Contains(sector);
 
-  [HarmonyPatch(nameof(ZDOMan.CreateSyncList))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.CreateSyncList))]
   [HarmonyPrefix]
-  static void CreateSyncList_Prefix(ZDOMan.ZDOPeer peer)
-  {
-    if (ZNet.instance.IsServer())
-      ForceZones.Window = ForceZones.For(peer.m_peer.m_uid);
-  }
+  static void CreateSyncList_Prefix(ZDOMan.ZDOPeer peer, out ZNetPeer? __state) =>
+    __state = PeerActive.Enter(peer.m_peer);
 
-  [HarmonyPatch(nameof(ZDOMan.CreateSyncList))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.CreateSyncList))]
   [HarmonyPostfix]
   static void CreateSyncList_Postfix(ZDOMan __instance, ZDOMan.ZDOPeer peer, List<ZDO> toSync)
   {
-    var zones = ForceZones.Window;
-    if (zones == null || zones.Count == 0) return;
     List<ZDO> objects = [];
-    foreach (var zone in zones)
+    foreach (var zone in ForceZones.Current)
       __instance.FindObjects(zone, objects, __instance.m_visitedSectorIndices);
     foreach (var zdo in objects)
     {
@@ -90,30 +91,30 @@ public class ZDOManPatches
     }
   }
 
-  [HarmonyPatch(nameof(ZDOMan.CreateSyncList))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.CreateSyncList))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.ReleaseNearbyZDOS))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.IsInPeerActiveArea))]
+  [HarmonyPatch(typeof(ZDOMan.ZDOPeer), nameof(ZDOMan.ZDOPeer.ZDOSectorInvalidated))]
   [HarmonyFinalizer]
-  static Exception? CreateSyncList_Finalizer(Exception? __exception)
+  static Exception? RestoreContext(ZNetPeer? __state, Exception? __exception)
   {
-    ForceZones.Window = null;
+    PeerActive.Context = __state;
     return __exception;
   }
 
-  [HarmonyPatch(nameof(ZDOMan.ReleaseNearbyZDOS))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.ReleaseNearbyZDOS))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.IsInPeerActiveArea))]
   [HarmonyPrefix]
-  static void ReleaseNearbyZDOS_Prefix(long uid)
-  {
-    ForceZones.Window = ForceZones.For(uid);
-  }
+  static void ActiveArea_Prefix(long uid, out ZNetPeer? __state) =>
+    __state = PeerActive.Enter(ZNet.instance.GetPeer(uid));
 
-  [HarmonyPatch(nameof(ZDOMan.ReleaseNearbyZDOS))]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.ReleaseNearbyZDOS))]
   [HarmonyPostfix]
   static void ReleaseNearbyZDOS_Postfix(ZDOMan __instance, long uid)
   {
-    var zones = ForceZones.Window;
-    if (zones == null || zones.Count == 0) return;
     HashSet<ZoneSystem.SectorIndex> visited = [];
     List<ZDO> objects = [];
-    foreach (var zone in zones)
+    foreach (var zone in ForceZones.Current)
       __instance.FindObjects(zone, objects, visited);
     foreach (var zdo in objects)
     {
@@ -123,43 +124,8 @@ public class ZDOManPatches
     }
   }
 
-  [HarmonyPatch(nameof(ZDOMan.ReleaseNearbyZDOS))]
-  [HarmonyFinalizer]
-  static Exception? ReleaseNearbyZDOS_Finalizer(Exception? __exception)
-  {
-    ForceZones.Window = null;
-    return __exception;
-  }
-
-  [HarmonyPatch(nameof(ZDOMan.IsInPeerActiveArea))]
+  [HarmonyPatch(typeof(ZDOMan.ZDOPeer), nameof(ZDOMan.ZDOPeer.ZDOSectorInvalidated))]
   [HarmonyPrefix]
-  static void IsInPeerActiveArea_Prefix(long uid, out HashSet<Vector2s>? __state)
-  {
-    __state = ForceZones.Window;
-    ForceZones.Window = ForceZones.For(uid);
-  }
-
-  [HarmonyPatch(nameof(ZDOMan.IsInPeerActiveArea))]
-  [HarmonyFinalizer]
-  static Exception? IsInPeerActiveArea_Finalizer(HashSet<Vector2s>? __state, Exception? __exception)
-  {
-    ForceZones.Window = __state;
-    return __exception;
-  }
-}
-
-[HarmonyPatch(typeof(ZDOMan.ZDOPeer), nameof(ZDOMan.ZDOPeer.ZDOSectorInvalidated))]
-public class ZDOPeer_ZDOSectorInvalidated
-{
-  static void Prefix(ZDOMan.ZDOPeer __instance, out HashSet<Vector2s>? __state)
-  {
-    __state = ForceZones.Window;
-    ForceZones.Window = ForceZones.For(__instance.m_peer.m_uid);
-  }
-
-  static Exception? Finalizer(HashSet<Vector2s>? __state, Exception? __exception)
-  {
-    ForceZones.Window = __state;
-    return __exception;
-  }
+  static void ZDOSectorInvalidated(ZDOMan.ZDOPeer __instance, out ZNetPeer? __state) =>
+    __state = PeerActive.Enter(__instance.m_peer);
 }

@@ -9,17 +9,12 @@ public static class ForceZones
   public const string RPC_FORCE_ACTIVE_REPLY = "RenderLimits_ForceActiveReply";
 
   private static readonly HashSet<Vector2s> None = [];
-  private static readonly Dictionary<long, HashSet<Vector2s>> Peers = [];
 
   public static bool Accepted = true;
-  public static HashSet<Vector2s>? Window = null;
   public static HashSet<Vector2s> Local => Accepted ? Configuration.ForceActive : None;
-  public static HashSet<Vector2s> Current => Window ?? Local;
+  public static HashSet<Vector2s> Current => For(PeerActive.Context);
 
-  public static HashSet<Vector2s> For(long uid) =>
-    uid == ZDOMan.instance.m_sessionID ? Local : Peers.TryGetValue(uid, out var zones) ? zones : None;
-
-  public static void Remove(long uid) => Peers.Remove(uid);
+  public static HashSet<Vector2s> For(ZNetPeer? peer) => peer == null ? Local : PeerActive.Get(peer).Zones;
 
   public static void Send()
   {
@@ -34,8 +29,9 @@ public static class ForceZones
 
   public static void RPC_ForceActive(ZRpc rpc, ZPackage package)
   {
-    var uid = ZNet.instance.GetPeer(rpc).m_uid;
-    var previous = For(uid);
+    var peer = ZNet.instance.GetPeer(rpc);
+    var data = PeerActive.Get(peer);
+    var previous = data.Zones;
     HashSet<Vector2s> zones = [];
     var accepted = Configuration.AllowForceActive;
     if (accepted)
@@ -51,8 +47,8 @@ public static class ForceZones
       }
     }
     if (!accepted) zones.Clear();
-    Peers[uid] = zones;
-    Release(previous, zones, uid);
+    data.Zones = zones;
+    Release(previous, zones, peer.m_uid);
     rpc.Invoke(RPC_FORCE_ACTIVE_REPLY, accepted);
   }
 
@@ -76,33 +72,5 @@ public static class ForceZones
       if (zdo.GetOwner() == uid && !manager.IsInPeerActiveArea(zdo.GetPosition(), uid))
         zdo.SetOwner(0L);
     }
-  }
-}
-
-[HarmonyPatch(typeof(ZNet), nameof(ZNet.RPC_PeerInfo))]
-public class ZNet_PeerInfo
-{
-  static void Postfix(ZNet __instance, ZRpc rpc)
-  {
-    if (__instance.GetPeer(rpc).m_uid == 0) return;
-    if (__instance.IsServer())
-    {
-      rpc.Register<ZPackage>(ForceZones.RPC_FORCE_ACTIVE, ForceZones.RPC_ForceActive);
-      return;
-    }
-    rpc.Register<bool>(ForceZones.RPC_FORCE_ACTIVE_REPLY, ForceZones.RPC_ForceActiveReply);
-    ForceZones.Accepted = true;
-    Configuration.SelectWorld();
-    ForceZones.Send();
-  }
-}
-
-[HarmonyPatch(typeof(ZNet), nameof(ZNet.Disconnect))]
-public class ZNet_Disconnect
-{
-  static void Postfix(ZNet __instance, ZNetPeer peer)
-  {
-    if (__instance.IsServer())
-      ForceZones.Remove(peer.m_uid);
   }
 }

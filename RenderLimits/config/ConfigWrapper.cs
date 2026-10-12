@@ -57,6 +57,12 @@ public class ConfigWrapper
     Register(configEntry);
     return configEntry;
   }
+  public ConfigEntry<bool> Bind(string group, string name, bool value, string description, Action onChange)
+  {
+    var configEntry = Bind(group, name, value, description);
+    configEntry.SettingChanged += (s, e) => onChange();
+    return configEntry;
+  }
   public ConfigEntry<string> Bind(string group, string name, string value, string description, Action onChange)
   {
     var configEntry = ConfigFile.Bind(group, name, value, description);
@@ -143,7 +149,7 @@ public class ConfigWrapper
       AddMessage(context, $"{name}: {setting.Value}.");
       return;
     }
-    setting.Value = (T)(object)value;
+    setting.SetSerializedValue(value);
     AddMessage(context, $"{name} set to {value}.");
   }
 }

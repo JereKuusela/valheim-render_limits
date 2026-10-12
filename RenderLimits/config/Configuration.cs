@@ -15,6 +15,8 @@ public class Configuration
   public static int LoadedArea => ConfigWrapper.ParseInt(configLoadedArea);
   public static ConfigEntry<string> configGeneratedArea;
   public static int GeneratedArea => ConfigWrapper.ParseInt(configGeneratedArea);
+  public static ConfigEntry<bool> configClassicShape;
+  public static bool ClassicShape => configClassicShape.Value;
   public static ConfigEntry<string> configRealTerrainVisibility;
   public static int RealTerrainVisibility => ConfigWrapper.ParseInt(configRealTerrainVisibility);
   public static ConfigEntry<string> configClutterVisibility;
@@ -76,6 +78,7 @@ public class Configuration
     configActivateArea = wrapper.Bind(section, "Active zones", "1", "Amounts of zones that are active around the player. Creatures are active in this area.", LimitManager.Update);
     configLoadedArea = wrapper.Bind(section, "Loaded zones", "2", "Amounts of zones loaded around the player. Structures are visible in this area. ", LimitManager.Update);
     configGeneratedArea = wrapper.Bind(section, "Generated zones", "4", "Amounts of zones generated around the player. Large static objects like trees are visible in this area.", LimitManager.Update);
+    configClassicShape = wrapper.Bind(section, "Classic shape", true, "Zones are loaded in a square. If false, the corners are cut and the area is rounded (active zones are reduced to fit).", LimitManager.Update);
     configRealTerrainVisibility = wrapper.Bind(section, "Real terrain visibility", "0", "Visibility in meters. If 0, the game decides from loaded area.", Heightmap.ApplySettingsOnAll);
     configForceActive = wrapper.Bind(section, "Force active", "", "Zones that are always active. Saved for each world.", () =>
     {
@@ -94,7 +97,7 @@ public class Configuration
     configShadowResolution = wrapper.Bind(section, "Shadow resolution", "", "Shadow quality. From 0 to 3.", (int value) => QualitySettings.shadowResolution = (ShadowResolution)Math.Max(0, Math.Min(3, value)));
 
     section = "3. Server limits";
-    configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones. Also limits loaded zones and active zones.", LimitManager.Update);
+    configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones. Also limits loaded zones and active zones. Applies to every client.", LimitManager.Update);
     configAllowForceActive = wrapper.Bind(section, "Allow force active", false, "Whether clients can have force active areas.");
     configMaximumForceActive = wrapper.Bind(section, "Maximum force active zones", "64", "Maximum force active zones for each client.", (int value) => { });
 
