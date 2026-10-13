@@ -1,6 +1,7 @@
 using HarmonyLib;
 namespace RenderLimits;
 
+// Game already handles terrain visibility, but custom support is kept for backward compatibility.
 [HarmonyPatch(typeof(Heightmap), nameof(Heightmap.GetLodHideDistance))]
 public class TerrainVisibility
 {

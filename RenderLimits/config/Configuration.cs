@@ -97,7 +97,7 @@ public class Configuration
     configShadowResolution = wrapper.Bind(section, "Shadow resolution", "", "Shadow quality. From 0 to 3.", (int value) => QualitySettings.shadowResolution = (ShadowResolution)Math.Max(0, Math.Min(3, value)));
 
     section = "3. Server limits";
-    configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones. Also limits loaded zones and active zones. Applies to every client.", LimitManager.Update);
+    configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones. Also limits loaded zones and active zones. Applies to every client.", LimitManager.UpdateMaximum);
     configAllowForceActive = wrapper.Bind(section, "Allow force active", false, "Whether clients can have force active areas.");
     configMaximumForceActive = wrapper.Bind(section, "Maximum force active zones", "64", "Maximum force active zones for each client.", (int value) => { });
 

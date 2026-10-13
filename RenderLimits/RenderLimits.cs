@@ -7,9 +7,9 @@ namespace RenderLimits;
 [BepInPlugin(GUID, NAME, VERSION)]
 public class RenderLimits : BaseUnityPlugin
 {
-  const string GUID = "render_limits";
-  const string NAME = "Render Limits";
-  const string VERSION = "1.15";
+  public const string GUID = "render_limits";
+  public const string NAME = "Render Limits";
+  public const string VERSION = "1.16";
 
   public void Awake()
   {

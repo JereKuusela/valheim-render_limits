@@ -11,6 +11,7 @@ public static class LimitManager
 
   private static bool batching = false;
   private static bool changed = false;
+  private static bool maximumChanged = false;
   public static void Reload(ConfigFile config)
   {
     batching = true;
@@ -26,6 +27,11 @@ public static class LimitManager
     changed = false;
     Update();
   }
+  public static void UpdateMaximum()
+  {
+    maximumChanged = true;
+    Update();
+  }
   public static void Update()
   {
     if (batching)
@@ -38,16 +44,16 @@ public static class LimitManager
     var far = total - near;
     Current = new SimulationDistance(near, far, Configuration.ClassicShape);
     if (ZNet.instance) Sync(ZNet.instance);
+    if (maximumChanged && ZNet.instance && ZNet.instance.IsServer())
+      PeerActive.Revalidate(ZNet.instance);
+    maximumChanged = false;
   }
 
   // Replaces the vanilla handshake, which makes the host's own settings the limit for every client.
   public static void Sync(ZNet net)
   {
     if (net.IsServer())
-    {
       net.ApplySimulationDistance(Current);
-      PeerActive.Revalidate(net);
-    }
     else
       PeerActive.Send(net);
   }

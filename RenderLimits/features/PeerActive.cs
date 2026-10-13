@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using HarmonyLib;
 namespace RenderLimits;
 
 public class PeerData
@@ -10,6 +9,8 @@ public class PeerData
   public HashSet<Vector2s> Zones = [];
 }
 
+// Some functions don't have peer id as parameter (because game handling is bugged and always uses server settings).
+// So must manage global context manually.
 public static class PeerActive
 {
   private const string RPC_REQUEST = "RPC_RequestValidSimulationDistance";
@@ -60,7 +61,7 @@ public static class PeerActive
     peer.m_rpc.Invoke(RPC_VALIDATED, package);
   }
 
-  // Re-applies the limit to what each peer requested, for when the maximum changes.
+  // Server can change the limit, which means client settings must be reconstrained.
   public static void Revalidate(ZNet net)
   {
     foreach (var peer in net.GetPeers())
