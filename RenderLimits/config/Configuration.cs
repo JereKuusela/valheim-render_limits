@@ -21,6 +21,8 @@ public class Configuration
   public static int RealTerrainVisibility => ConfigWrapper.ParseInt(configRealTerrainVisibility);
   public static ConfigEntry<string> configClutterVisibility;
   public static int ClutterVisibility => ConfigWrapper.ParseInt(configClutterVisibility);
+  public static ConfigEntry<string> configLightDistance;
+  public static int LightDistance => ConfigWrapper.ParseInt(configLightDistance);
   public static ConfigEntry<string> configForceActive;
   public static HashSet<Vector2s> ForceActive = [];
   private static readonly Dictionary<long, HashSet<Vector2s>> forceActiveByWorld = [];
@@ -30,6 +32,8 @@ public class Configuration
   public static int MaximumGeneratedArea => Math.Max(1, ConfigWrapper.ParseInt(configMaximumGeneratedArea));
   public static ConfigEntry<bool> configAllowForceActive;
   public static bool AllowForceActive => configAllowForceActive.Value;
+  public static ConfigEntry<bool> configAllowDistantLights;
+  public static bool AllowDistantLights => configAllowDistantLights.Value;
   public static ConfigEntry<string> configMaximumForceActive;
   public static int MaximumForceActive => Math.Max(0, ConfigWrapper.ParseInt(configMaximumForceActive));
 
@@ -88,6 +92,7 @@ public class Configuration
 
     section = "2. Quality";
     configClutterVisibility = wrapper.Bind(section, "Clutter visibility", "45", "Visibility in meters.", ClutterDistance.Update);
+    configLightDistance = wrapper.Bind(section, "Light distance", "", "Visibility of lights in meters. Also loads lights from generated zones, if the server allows it. Increase also Lod bias to keep the glow of lamps visible. If empty, the game decides.", LimitManager.Update);
     configLodBias = wrapper.Bind(section, "Lod bias", "", "Level of detail limit (increase to show smaller objects, vanilla is from 1 to 5 but even 100 works).", (int value) => QualitySettings.lodBias = value);
     configPixelLightCount = wrapper.Bind(section, "Pixel light count", "", "Light detail (bigger the better, vanilla is from 2 to 8).", value => QualitySettings.pixelLightCount = value);
     configShadowCascades = wrapper.Bind(section, "Shadow cascades", "", "Improves shadows near the camera (bigger the better, vanilla is from 2 to 4).", value => QualitySettings.shadowCascades = value);
@@ -99,6 +104,7 @@ public class Configuration
     section = "3. Server limits";
     configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones. Also limits loaded zones and active zones. Applies to every client.", LimitManager.UpdateMaximum);
     configAllowForceActive = wrapper.Bind(section, "Allow force active", false, "Whether clients can have force active areas.");
+    configAllowDistantLights = wrapper.Bind(section, "Allow distant lights", false, "Whether clients can load lights from generated zones.");
     configMaximumForceActive = wrapper.Bind(section, "Maximum force active zones", "64", "Maximum force active zones for each client.", (int value) => { });
 
     ParseForceActive(configForceActive.Value);

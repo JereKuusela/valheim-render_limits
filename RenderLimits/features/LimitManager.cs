@@ -135,6 +135,8 @@ public static class ZNetPatches
     data.Requested = requested;
     if (pkg.GetPos() < pkg.Size())
       data.RequestedActive = Math.Max(0, pkg.ReadInt());
+    if (pkg.GetPos() < pkg.Size())
+      data.DistantLights = pkg.ReadBool();
     PeerActive.Apply(peer, LimitManager.Limit(requested));
     return false;
   }
