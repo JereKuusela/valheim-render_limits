@@ -135,8 +135,6 @@ public static class ZNetPatches
     data.Requested = requested;
     if (pkg.GetPos() < pkg.Size())
       data.RequestedActive = Math.Max(0, pkg.ReadInt());
-    if (pkg.GetPos() < pkg.Size())
-      data.DistantLights = pkg.ReadBool();
     PeerActive.Apply(peer, LimitManager.Limit(requested));
     return false;
   }
@@ -163,11 +161,13 @@ public static class ZNetPatches
     if (__instance.IsServer())
     {
       rpc.Register<ZPackage>(ForceZones.RPC_FORCE_ACTIVE, ForceZones.RPC_ForceActive);
+      rpc.Register<ZPackage>(DistantLights.RPC_DISTANT_LIGHTS, DistantLights.RPC_DistantLights);
       return;
     }
     rpc.Register<bool>(ForceZones.RPC_FORCE_ACTIVE_REPLY, ForceZones.RPC_ForceActiveReply);
     Configuration.SelectWorld();
     PeerActive.Send(__instance);
     ForceZones.Send();
+    DistantLights.Send();
   }
 }

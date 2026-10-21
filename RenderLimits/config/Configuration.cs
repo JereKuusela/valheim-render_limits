@@ -92,7 +92,7 @@ public class Configuration
 
     section = "2. Quality";
     configClutterVisibility = wrapper.Bind(section, "Clutter visibility", "45", "Visibility in meters.", ClutterDistance.Update);
-    configLightDistance = wrapper.Bind(section, "Light distance", "", "Visibility of lights in meters. Also loads lights from generated zones, if the server allows it. Increase also Lod bias to keep the glow of lamps visible. If empty, the game decides.", LimitManager.Update);
+    configLightDistance = wrapper.Bind(section, "Light distance", "", "Visibility of lights in meters. Also loads lights from generated zones, if the server allows it. Increase also Lod bias to keep the glow of lamps visible. If empty, the game decides.", DistantLights.Send);
     configLodBias = wrapper.Bind(section, "Lod bias", "", "Level of detail limit (increase to show smaller objects, vanilla is from 1 to 5 but even 100 works).", (int value) => QualitySettings.lodBias = value);
     configPixelLightCount = wrapper.Bind(section, "Pixel light count", "", "Light detail (bigger the better, vanilla is from 2 to 8).", value => QualitySettings.pixelLightCount = value);
     configShadowCascades = wrapper.Bind(section, "Shadow cascades", "", "Improves shadows near the camera (bigger the better, vanilla is from 2 to 4).", value => QualitySettings.shadowCascades = value);

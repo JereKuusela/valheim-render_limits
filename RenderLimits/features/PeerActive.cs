@@ -6,7 +6,7 @@ public class PeerData
 {
   public SimulationDistance? Requested;
   public int RequestedActive = 1;
-  public bool DistantLights;
+  public HashSet<int> DistantLights = [];
   public HashSet<Vector2s> Zones = [];
 }
 
@@ -51,7 +51,6 @@ public static class PeerActive
     ZPackage package = new();
     LimitManager.Current.Serialize(ref package);
     package.Write(LimitManager.RequestedActive);
-    package.Write(Configuration.LightDistance > 0);
     rpc.Invoke(RPC_REQUEST, package);
   }
 

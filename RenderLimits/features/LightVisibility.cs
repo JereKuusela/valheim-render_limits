@@ -33,34 +33,3 @@ public static class LightDistance
 
   static float Distance(float distance) => Configuration.LightDistance > 0 ? Configuration.LightDistance : distance;
 }
-
-[HarmonyPatch]
-public static class DistantLights
-{
-  private static readonly Dictionary<int, bool> Lights = [];
-
-  [HarmonyPatch(typeof(ZDOMan), "FindDistantObjects"), HarmonyTranspiler]
-  static IEnumerable<CodeInstruction> FindDistantObjects_Transpiler(IEnumerable<CodeInstruction> instructions) =>
-    new CodeMatcher(instructions)
-      .MatchForward(false, new CodeMatch(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ZDO), nameof(ZDO.Distant))))
-      .Set(OpCodes.Call, AccessTools.Method(typeof(DistantLights), nameof(IsDistant)))
-      .InstructionEnumeration();
-
-  static bool IsDistant(ZDO zdo) => zdo.Distant || (LoadsLights() && IsLight(zdo.GetPrefab()));
-
-  static bool LoadsLights()
-  {
-    var peer = PeerActive.Context;
-    if (peer == null) return Configuration.LightDistance > 0;
-    return Configuration.AllowDistantLights && PeerActive.Get(peer).DistantLights;
-  }
-
-  static bool IsLight(int prefab)
-  {
-    if (Lights.TryGetValue(prefab, out var light)) return light;
-    var obj = ZNetScene.instance.GetPrefab(prefab);
-    light = obj && obj.GetComponentInChildren<LightLod>(true);
-    Lights[prefab] = light;
-    return light;
-  }
-}
