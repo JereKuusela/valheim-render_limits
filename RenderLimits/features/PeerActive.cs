@@ -6,6 +6,7 @@ public class PeerData
 {
   public SimulationDistance? Requested;
   public int RequestedActive = 1;
+  public HashSet<int> DistantLights = [];
   public HashSet<Vector2s> Zones = [];
 }
 

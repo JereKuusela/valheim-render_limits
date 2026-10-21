@@ -35,6 +35,8 @@ On multiplayer, the mod must be installed on the server. The mod replaces the ga
 - Clutter visibility (default: `45`): Visibility in meters.
 - Lod bias (default: none): Level of detail limit (increase to show smaller objects, vanilla is from 1 to 5 but even 100 works).
 - Pixel light count (default: none): Light detail (bigger the better, vanilla is from 2 to 8).
+- Light distance (default: none): Visibility of lights in meters. Also loads lights from generated zones, if the server allows it.
+  - The glow of lamps is not a light. Increase also Lod bias to keep it visible.
 - Shadow cascades (default: none): Improves shadows near the camera (bigger the better, vanilla is from 2 to 4).
 - Shadow quality (default: none): 0: off, 1: hard only, 2: all.
 - Shadow distance (default: none): Max distance for shadows in meters (vanilla is from 80 to 150).
@@ -49,6 +51,7 @@ On multiplayer, the mod must be installed on the server. The mod replaces the ga
   - The server can refuse the list. Then the client does not use force active.
   - Force active can be used to collapse buildings by only loading a part of them.
 - Maximum force active zones (default: `64`): Maximum force active zones for each client.
+- Allow distant lights (default: `false`): Whether clients can load lights from generated zones.
 
 ## Commands
 
