@@ -51,7 +51,7 @@ On multiplayer, the mod must be installed on the server. The mod replaces the ga
   - The server can refuse the list. Then the client does not use force active.
   - Force active can be used to collapse buildings by only loading a part of them.
 - Maximum force active zones (default: `64`): Maximum force active zones for each client.
-- Allow distant lights (default: `false`): Whether clients can load lights from generated zones.
+- Allow custom distant object (default: `true`): Whether clients can load objects (like lights) from generated zones.
 
 ## Commands
 

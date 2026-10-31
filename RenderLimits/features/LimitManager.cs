@@ -161,13 +161,13 @@ public static class ZNetPatches
     if (__instance.IsServer())
     {
       rpc.Register<ZPackage>(ForceZones.RPC_FORCE_ACTIVE, ForceZones.RPC_ForceActive);
-      rpc.Register<ZPackage>(DistantLights.RPC_DISTANT_LIGHTS, DistantLights.RPC_DistantLights);
+      rpc.Register<ZPackage>(DistantObjects.RPC_DISTANT_OBJECTS, DistantObjects.RPC_DistantObjects);
       return;
     }
     rpc.Register<bool>(ForceZones.RPC_FORCE_ACTIVE_REPLY, ForceZones.RPC_ForceActiveReply);
     Configuration.SelectWorld();
     PeerActive.Send(__instance);
     ForceZones.Send();
-    DistantLights.Send();
+    DistantObjects.Send();
   }
 }

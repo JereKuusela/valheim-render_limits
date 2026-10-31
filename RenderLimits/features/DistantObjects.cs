@@ -4,9 +4,9 @@ using HarmonyLib;
 namespace RenderLimits;
 
 [HarmonyPatch]
-public static class DistantLights
+public static class DistantObjects
 {
-  public const string RPC_DISTANT_LIGHTS = "RenderLimits_DistantLights";
+  public const string RPC_DISTANT_OBJECTS = "RenderLimits_DistantObjects";
   private const int MaximumPrefabs = 1000;
 
   private static readonly HashSet<int> None = [];
@@ -36,10 +36,10 @@ public static class DistantLights
     package.Write(prefabs.Count);
     foreach (var prefab in prefabs)
       package.Write(prefab);
-    net.GetServerRPC()?.Invoke(RPC_DISTANT_LIGHTS, package);
+    net.GetServerRPC()?.Invoke(RPC_DISTANT_OBJECTS, package);
   }
 
-  public static void RPC_DistantLights(ZRpc rpc, ZPackage package)
+  public static void RPC_DistantObjects(ZRpc rpc, ZPackage package)
   {
     var count = package.ReadInt();
     HashSet<int> prefabs = [];
@@ -48,17 +48,17 @@ public static class DistantLights
       for (var i = 0; i < count; i++)
         prefabs.Add(package.ReadInt());
     }
-    PeerActive.Get(ZNet.instance.GetPeer(rpc)).DistantLights = prefabs;
+    PeerActive.Get(ZNet.instance.GetPeer(rpc)).DistantObjects = prefabs;
   }
 
-  [HarmonyPatch(typeof(ZNetScene), "Awake"), HarmonyPostfix]
+  [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.Awake)), HarmonyPostfix]
   static void ZNetScene_Awake() => Send();
 
-  [HarmonyPatch(typeof(ZDOMan), "FindDistantObjects"), HarmonyTranspiler]
+  [HarmonyPatch(typeof(ZDOMan), nameof(ZDOMan.FindDistantObjects)), HarmonyTranspiler]
   static IEnumerable<CodeInstruction> FindDistantObjects_Transpiler(IEnumerable<CodeInstruction> instructions) =>
     new CodeMatcher(instructions)
       .MatchForward(false, new CodeMatch(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ZDO), nameof(ZDO.Distant))))
-      .Set(OpCodes.Call, AccessTools.Method(typeof(DistantLights), nameof(IsDistant)))
+      .Set(OpCodes.Call, AccessTools.Method(typeof(DistantObjects), nameof(IsDistant)))
       .InstructionEnumeration();
 
   static bool IsDistant(ZDO zdo) => zdo.Distant || For(PeerActive.Context).Contains(zdo.GetPrefab());
@@ -66,6 +66,6 @@ public static class DistantLights
   static HashSet<int> For(ZNetPeer? peer)
   {
     if (peer == null) return Local();
-    return Configuration.AllowDistantLights ? PeerActive.Get(peer).DistantLights : None;
+    return Configuration.AllowCustomDistantObjects ? PeerActive.Get(peer).DistantObjects : None;
   }
 }

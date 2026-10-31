@@ -6,28 +6,24 @@ namespace RenderLimits;
 [HarmonyPatch]
 public static class LightDistance
 {
-  static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+  [HarmonyPatch(typeof(LightLod), nameof(LightLod.UpdateLoop), MethodType.Enumerator), HarmonyTranspiler]
+  static IEnumerable<CodeInstruction> UpdateLoop_Transpiler(IEnumerable<CodeInstruction> instructions) => Transpile(instructions);
+
+  [HarmonyPatch(typeof(LightLod), nameof(LightLod.UpdateLights)), HarmonyTranspiler]
+  static IEnumerable<CodeInstruction> UpdateLights_Transpiler(IEnumerable<CodeInstruction> instructions) => Transpile(instructions);
+
+  static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
   {
-    yield return AccessTools.EnumeratorMoveNext(AccessTools.Method(typeof(LightLod), nameof(LightLod.UpdateLoop)));
-    yield return AccessTools.Method(typeof(LightLod), nameof(LightLod.UpdateLights));
+    var matcher = new CodeMatcher(instructions);
+    WrapField(matcher, nameof(LightLod.m_lightDistance), nameof(Distance));
+    WrapField(matcher, nameof(LightLod.m_lightLod), nameof(Lod));
+    return matcher.InstructionEnumeration();
   }
 
-  [HarmonyTranspiler]
-  static IEnumerable<CodeInstruction> LightDistance_Transpiler(IEnumerable<CodeInstruction> instructions)
-  {
-    var field = AccessTools.Field(typeof(LightLod), nameof(LightLod.m_lightDistance));
-    var method = AccessTools.Method(typeof(LightDistance), nameof(Distance));
-    var lodField = AccessTools.Field(typeof(LightLod), nameof(LightLod.m_lightLod));
-    var lodMethod = AccessTools.Method(typeof(LightDistance), nameof(Lod));
-    foreach (var instruction in instructions)
-    {
-      yield return instruction;
-      if (instruction.LoadsField(field))
-        yield return new CodeInstruction(OpCodes.Call, method);
-      if (instruction.LoadsField(lodField))
-        yield return new CodeInstruction(OpCodes.Call, lodMethod);
-    }
-  }
+  static void WrapField(CodeMatcher matcher, string field, string method) =>
+    matcher.Start()
+      .MatchForward(false, new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(LightLod), field)))
+      .Repeat(m => m.Advance(1).InsertAndAdvance(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(LightDistance), method))));
 
   static bool Lod(bool lod) => lod || Configuration.LightDistance > 0;
 
