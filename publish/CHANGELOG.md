@@ -1,3 +1,7 @@
+- v1.17
+  - Adds setting to load distant lights. Thanks Zeall!
+  - Adds setting for light distance multiplier.. Thanks Zeall!
+
 - v1.16
   - Adds setting for the shape to match vanilla settings.
   - Fixed to work with the new update. Thanks Zeall!
@@ -17,9 +21,3 @@
 
 - v1.13
   - Fixes Force active not working on single player (multiplayer of course doesn't work).
-
-- v1.12
-  - Fixed for the new game version.
-
-- v1.11
-  - Fixes some settings being reset on game restart.

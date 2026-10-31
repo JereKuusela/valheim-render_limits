@@ -25,7 +25,7 @@ public static class DistantObjects
     return lights;
   }
 
-  private static HashSet<int> Local() => Configuration.LightDistance > 0 ? Lights() : None;
+  private static HashSet<int> Local() => Configuration.DistantLights ? Lights() : None;
 
   public static void Send()
   {

@@ -9,13 +9,19 @@ public class RenderLimits : BaseUnityPlugin
 {
   public const string GUID = "render_limits";
   public const string NAME = "Render Limits";
-  public const string VERSION = "1.16";
+  public const string VERSION = "1.17";
 
   public void Awake()
   {
     Configuration.Init(Config);
+    LightDistance.Update();
     new Harmony(GUID).PatchAll();
     SetupWatcher();
+  }
+
+  public void Update()
+  {
+    Configuration.HandleKeybinds();
   }
 
   private void SetupWatcher()

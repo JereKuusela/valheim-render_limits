@@ -21,8 +21,10 @@ public class Configuration
   public static int RealTerrainVisibility => ConfigWrapper.ParseInt(configRealTerrainVisibility);
   public static ConfigEntry<string> configClutterVisibility;
   public static int ClutterVisibility => ConfigWrapper.ParseInt(configClutterVisibility);
-  public static ConfigEntry<string> configLightDistance;
-  public static int LightDistance => ConfigWrapper.ParseInt(configLightDistance);
+  public static ConfigEntry<string> configLightLodMultiplier;
+  public static float LightLodMultiplier => ConfigWrapper.ParseFloat(configLightLodMultiplier);
+  public static ConfigEntry<bool> configDistantLights;
+  public static bool DistantLights => configDistantLights.Value;
   public static ConfigEntry<string> configForceActive;
   public static HashSet<Vector2s> ForceActive = [];
   private static readonly Dictionary<long, HashSet<Vector2s>> forceActiveByWorld = [];
@@ -43,6 +45,37 @@ public class Configuration
   public static ConfigEntry<string> configShadowDistance;
   public static ConfigEntry<string> configShadowResolution;
   public static ConfigEntry<string> configLodBias;
+
+  public static ConfigEntry<KeyboardShortcut> keyActiveIncrease, keyActiveDecrease;
+  public static ConfigEntry<KeyboardShortcut> keyLoadedIncrease, keyLoadedDecrease;
+  public static ConfigEntry<KeyboardShortcut> keyDistantIncrease, keyDistantDecrease;
+  public static ConfigEntry<KeyboardShortcut> keyBothIncrease, keyBothDecrease;
+
+  private static void Adjust(ConfigEntry<string> entry, int delta, int min)
+  {
+    var max = Math.Max(min, MaximumGeneratedArea);
+    entry.Value = Math.Max(min, Math.Min(max, ConfigWrapper.ParseInt(entry) + delta)).ToString();
+  }
+  public static void HandleKeybinds()
+  {
+    if (!Player.m_localPlayer || Chat.instance && Chat.instance.HasFocus() || Console.IsVisible() || TextInput.IsVisible()) return;
+    var step = 0;
+    void check(ConfigEntry<KeyboardShortcut> up, ConfigEntry<KeyboardShortcut> down, Action<int> apply)
+    {
+      if (up.Value.IsDown()) step = 1;
+      else if (down.Value.IsDown()) step = -1;
+      else return;
+      apply(step);
+    }
+    check(keyActiveIncrease, keyActiveDecrease, d => Adjust(configActivateArea, d, 0));
+    check(keyLoadedIncrease, keyLoadedDecrease, d => Adjust(configLoadedArea, d, 1));
+    check(keyDistantIncrease, keyDistantDecrease, d => Adjust(configGeneratedArea, d, 1));
+    check(keyBothIncrease, keyBothDecrease, d =>
+    {
+      Adjust(configLoadedArea, d, 1);
+      Adjust(configGeneratedArea, d, 1);
+    });
+  }
 
   private static void ParseForceActive(string value)
   {
@@ -92,7 +125,8 @@ public class Configuration
 
     section = "2. Quality";
     configClutterVisibility = wrapper.Bind(section, "Clutter visibility", "45", "Visibility in meters.", ClutterDistance.Update);
-    configLightDistance = wrapper.Bind(section, "Light distance", "", "Visibility of lights in meters. Also loads lights from generated zones, if the server allows it. Increase also Lod bias to keep the glow of lamps visible. If empty, the game decides.", DistantObjects.Send);
+    configDistantLights = wrapper.Bind(section, "Distant lights", false, "Show lights in generated areas (causes them to be loaded from further away).", DistantObjects.Send);
+    configLightLodMultiplier = wrapper.Bind(section, "Light distance multiplier", "1", "Multiplies the distance when lights are disabled.", LightDistance.Update);
     configLodBias = wrapper.Bind(section, "Lod bias", "", "Level of detail limit (increase to show smaller objects, vanilla is from 1 to 5 but even 100 works).", (int value) => QualitySettings.lodBias = value);
     configPixelLightCount = wrapper.Bind(section, "Pixel light count", "", "Light detail (bigger the better, vanilla is from 2 to 8).", value => QualitySettings.pixelLightCount = value);
     configShadowCascades = wrapper.Bind(section, "Shadow cascades", "", "Improves shadows near the camera (bigger the better, vanilla is from 2 to 4).", value => QualitySettings.shadowCascades = value);
@@ -104,8 +138,18 @@ public class Configuration
     section = "3. Server limits";
     configMaximumGeneratedArea = wrapper.Bind(section, "Maximum generated zones", "10", "Maximum generated zones. Also limits loaded zones and active zones. Applies to every client.", LimitManager.UpdateMaximum);
     configAllowForceActive = wrapper.Bind(section, "Allow force active", false, "Whether clients can have force active areas.");
-    configAllowCustomDistantObjects = wrapper.Bind(section, "Allow custom distant object", true, "Whether clients can load objects (like lights) from generated zones.");
+    configAllowCustomDistantObjects = wrapper.Bind(section, "Allow custom distant objects", true, "Whether clients can load objects (like lights) from generated zones.");
     configMaximumForceActive = wrapper.Bind(section, "Maximum force active zones", "64", "Maximum force active zones for each client.", (int value) => { });
+
+    section = "4. Keybinds";
+    keyActiveIncrease = configFile.Bind(section, "Increase active zones", KeyboardShortcut.Empty, "Key to increase active zones.");
+    keyActiveDecrease = configFile.Bind(section, "Decrease active zones", KeyboardShortcut.Empty, "Key to decrease active zones.");
+    keyLoadedIncrease = configFile.Bind(section, "Increase loaded zones", KeyboardShortcut.Empty, "Key to increase loaded zones.");
+    keyLoadedDecrease = configFile.Bind(section, "Decrease loaded zones", KeyboardShortcut.Empty, "Key to decrease loaded zones.");
+    keyDistantIncrease = configFile.Bind(section, "Increase generated zones", KeyboardShortcut.Empty, "Key to increase generated (distant) zones.");
+    keyDistantDecrease = configFile.Bind(section, "Decrease generated zones", KeyboardShortcut.Empty, "Key to decrease generated (distant) zones.");
+    keyBothIncrease = configFile.Bind(section, "Increase loaded and generated zones", KeyboardShortcut.Empty, "Key to increase both loaded and generated zones.");
+    keyBothDecrease = configFile.Bind(section, "Decrease loaded and generated zones", KeyboardShortcut.Empty, "Key to decrease both loaded and generated zones.");
 
     ParseForceActive(configForceActive.Value);
     LimitManager.Update();
